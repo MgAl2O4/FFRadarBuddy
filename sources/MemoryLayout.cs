@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FFRadarBuddy
 {
     public class MemoryLayout
     {
-        // offsets and signatures based on projects:
+        // actor and target => based on project
         // https://github.com/FFXIVAPP/sharlayan
-        // https://github.com/goaaats/Nhaama
+        //
+        // camera: researched on my own
 
-        public static MemoryPath memPathActors = new MemoryPath(0x1B29B40);
-        public static MemoryPath memPathCamera = new MemoryPath(0x1B28530, 0);
+        public static MemoryPath memPathActors = new MemoryPathSignature("488b420848c1e8033da701000077248bc0488d0d", 0);
         public static MemoryPath memPathTarget = new MemoryPathSignature("41bc000000e041bd01000000493bc47555488d0d", 144);
+        public static MemoryPath memPathCamera = new MemoryPath(0x1B28530, 0);
 
         public class ActorConsts
         {
@@ -25,9 +24,7 @@ namespace FFRadarBuddy
             public const int NpcId = 128;           // uint32
             public const int Type = 140;            // uint8
             public const int SubType = 141;         // uint8
-            public const int PosX = 160;            // float
-            public const int PosY = 168;            // float
-            public const int PosZ = 164;            // float
+            public const int Position = 160;        // 3x float
             public const int HitBoxRadius = 192;    // float
         }
 
@@ -39,56 +36,56 @@ namespace FFRadarBuddy
 
         public class CameraConsts
         {
-            public const int Size = 0x1c0;
-            public const int Fov = 0x124;       // float
-            public const int Pos = 0x1A0;       // 3x float
-            public const int Focus = 0x1B0;     // 3x float
+            public const int Size = 0x1d0;
+            public const int Position = 0x1b0;       // 3x float
+            public const int Target = 0x1c0;         // 3x float
+            public const int Distance = 0x118;      // float
+            public const int Fov = 0x124;           // float
         }
 
         public enum ActorType : byte
         {
             None = 0,
             Player = 1,
-            BattleNpc = 2,
-            EventNpc = 3,
+            Monster = 2,
+            Npc = 3,
             Treasure = 4,
             Aetheryte = 5,
-            GatheringPoint = 6,
-            EventObj = 7,
+            Gathering = 6,
+            Interaction = 7,
             MountType = 8,
             Minion = 9,
             Retainer = 10,
             Area = 11,
             Housing = 12,
-            Cutscene = 13,
-            CardStand = 14,
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public class ActorData
         {
+            public long MemAddress;
             public string Name;
             public uint ActorId;
             public uint NpcId;
             public ActorType Type;
             public byte SubType;
-            public float PosX;
-            public float PosY;
-            public float PosZ;
+            public Vector3 Position = new Vector3();
             public float Radius;
 
-            public ActorData(byte[] bytes) { Set(bytes); }
+            public ActorData() { }
+            public ActorData(long addr, byte[] bytes) { Set(addr, bytes); }
 
-            public void Set(byte[] bytes)
+            public void Set(long addr, byte[] bytes)
             {
+                MemAddress = addr;
                 ActorId = BitConverter.ToUInt32(bytes, ActorConsts.ActorId);
                 NpcId = BitConverter.ToUInt32(bytes, ActorConsts.NpcId);
                 Type = (ActorType)bytes[ActorConsts.Type];
                 SubType = bytes[ActorConsts.SubType];
-                PosX = BitConverter.ToSingle(bytes, ActorConsts.PosX);
-                PosY = BitConverter.ToSingle(bytes, ActorConsts.PosY);
-                PosZ = BitConverter.ToSingle(bytes, ActorConsts.PosZ);
+                Position.X = BitConverter.ToSingle(bytes, ActorConsts.Position);
+                Position.Y = BitConverter.ToSingle(bytes, ActorConsts.Position + 4);
+                Position.Z = BitConverter.ToSingle(bytes, ActorConsts.Position + 8);
                 Radius = BitConverter.ToSingle(bytes, ActorConsts.HitBoxRadius);
 
                 // read string at Actor.Name
@@ -111,37 +108,41 @@ namespace FFRadarBuddy
 
         public class TargetData
         {
-            public long CurrentAddr;
+            public long MemAddress;
+            public long CurrentAddress;
 
-            public TargetData(byte[] bytes) { Set(bytes); }
+            public TargetData() { }
+            public TargetData(long addr, byte[] bytes) { Set(addr, bytes); }
 
-            public void Set(byte[] bytes)
+            public void Set(long addr, byte[] bytes)
             {
-                CurrentAddr = BitConverter.ToInt64(bytes, TargetConsts.Current);
+                MemAddress = addr;
+                CurrentAddress = BitConverter.ToInt64(bytes, TargetConsts.Current);
             }
         }
 
         public class CameraData
         {
+            public long MemAddress;
             public float Fov;
-            public float PosX;
-            public float PosY;
-            public float PosZ;
-            public float FocusX;
-            public float FocusY;
-            public float FocusZ;
+            public float Distance;
+            public Vector3 Position = new Vector3();
+            public Vector3 Target = new Vector3();
 
-            public CameraData(byte[] bytes) { Set(bytes); }
+            public CameraData() { }
+            public CameraData(long addr, byte[] bytes) { Set(addr, bytes); }
 
-            public void Set(byte[] bytes)
+            public void Set(long addr, byte[] bytes)
             {
+                MemAddress = addr;
                 Fov = BitConverter.ToSingle(bytes, CameraConsts.Fov);
-                PosX = BitConverter.ToSingle(bytes, CameraConsts.Pos);
-                PosY = BitConverter.ToSingle(bytes, CameraConsts.Pos + 4);
-                PosZ = BitConverter.ToSingle(bytes, CameraConsts.Pos + 8);
-                FocusX = BitConverter.ToSingle(bytes, CameraConsts.Focus);
-                FocusY = BitConverter.ToSingle(bytes, CameraConsts.Focus + 4);
-                FocusZ = BitConverter.ToSingle(bytes, CameraConsts.Focus + 8);
+                Distance = BitConverter.ToSingle(bytes, CameraConsts.Distance);
+                Position.X = BitConverter.ToSingle(bytes, CameraConsts.Position);
+                Position.Y = BitConverter.ToSingle(bytes, CameraConsts.Position + 4);
+                Position.Z = BitConverter.ToSingle(bytes, CameraConsts.Position + 8);
+                Target.X = BitConverter.ToSingle(bytes, CameraConsts.Target);
+                Target.Y = BitConverter.ToSingle(bytes, CameraConsts.Target + 4);
+                Target.Z = BitConverter.ToSingle(bytes, CameraConsts.Target + 8);
             }
         }
     }
