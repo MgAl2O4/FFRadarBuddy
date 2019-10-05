@@ -16,7 +16,7 @@ namespace FFRadarBuddy
 
         public class OverlaySettings
         {
-            public enum LabelMode
+            public enum DisplayMode
             {
                 Never,
                 WhenLookingAt,
@@ -26,9 +26,16 @@ namespace FFRadarBuddy
             }
 
             public bool IsHighlighted = false;
-            public LabelMode Mode = LabelMode.WhenLookingAt;
+            public DisplayMode Mode = DisplayMode.WhenLookingAt;
             public Pen DrawPen = Pens.Black;
             public string Description;
+
+            public void SetDefault(string Name)
+            {
+                Mode = DisplayMode.WhenClose;
+                DrawPen = Pens.Gray;
+                Description = Name;
+            }
 
             public override string ToString()
             {
@@ -39,7 +46,7 @@ namespace FFRadarBuddy
         public class ActorItem : MemoryLayout.ActorData
         {
             public string ShowName { get { return Name; } }
-            public string ShowType { get { return Type + ":" + SubType; } }
+            public string ShowType { get { return Type.ToString(); } }
             public string ShowId { get { return "0x" + NpcId.ToString("x"); } }
             public string ShowActorId { get { return string.Format("{0:x}:{1:x}", ActorIdA, ActorIdB); } }
             public string ShowPos { get { return string.Format("[{0:0.0}, {1:0.0}, {2:0.0}]", Position.X, Position.Y, Position.Z); } }
@@ -119,6 +126,11 @@ namespace FFRadarBuddy
 
         private void UpdateActors()
         {
+            if (scannerState != ScannerState.Ready)
+            {
+                return;
+            }
+
             try
             {
                 actorScanPass++;

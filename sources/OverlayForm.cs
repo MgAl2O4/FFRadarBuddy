@@ -22,18 +22,28 @@ namespace FFRadarBuddy
         private float aspectRatio = 0;
 
         private Bitmap overlayImage = null;
-        private Font labelFont = new Font(FontFamily.GenericSansSerif, 8.0f);
-        private Font labelFontLarge = new Font(FontFamily.GenericSansSerif, 10.0f, FontStyle.Bold);
+        private Font labelFont = null;
+        private Font labelFontLarge = null;
         private Brush labelBackgroundBrush = new SolidBrush(Color.FromArgb(64, Color.Black));
         private Brush labelForegroundBrush = new SolidBrush(Color.FromArgb(192, Color.White));
         private float highlightAnimAlpha = 0;
 
-        private float maxProjectedDistFromCenter = 0.5f;
+        private float maxProjectedDistFromCenterSq = 0.25f;
         private float maxDistanceFromCamera = 100.0f;
 
         public OverlayForm()
         {
             InitializeComponent();
+        }
+
+        public void Initialize()
+        {
+            PlayerSettings settings = PlayerSettings.Get();
+            maxProjectedDistFromCenterSq = settings.MaxDistanceFromCenter * settings.MaxDistanceFromCenter;
+            maxDistanceFromCamera = settings.MaxDistanceFromCamera;
+
+            labelFont = new Font(FontFamily.GenericSansSerif, settings.FontSize);
+            labelFontLarge = new Font(FontFamily.GenericSansSerif, settings.FontSize + 2.0f, FontStyle.Bold);
         }
 
         public void SetScanActive(bool bActive)
@@ -98,20 +108,20 @@ namespace FFRadarBuddy
             bool canShow = false;
             if (projectedPt.Z > 0)
             {
-                if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.Always || actor.OverlaySettings.IsHighlighted)
+                if (actor.OverlaySettings.Mode == GameData.OverlaySettings.DisplayMode.Always || actor.OverlaySettings.IsHighlighted)
                 {
                     canShow = true;
                 }
-                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenClose)
+                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.DisplayMode.WhenClose)
                 {
                     canShow = (actor.Distance < maxDistanceFromCamera);
                 }
-                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenLookingAt || actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenCloseAndLookingAt)
+                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.DisplayMode.WhenLookingAt || actor.OverlaySettings.Mode == GameData.OverlaySettings.DisplayMode.WhenCloseAndLookingAt)
                 {
                     float distFromCenterSq = ((projectedPt.X / projectedPt.Z) * (projectedPt.X / projectedPt.Z)) + ((projectedPt.Y / projectedPt.Z) * (projectedPt.Y / projectedPt.Z));
-                    if (distFromCenterSq < (maxProjectedDistFromCenter * maxProjectedDistFromCenter))
+                    if (distFromCenterSq < maxProjectedDistFromCenterSq)
                     {
-                        if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenLookingAt)
+                        if (actor.OverlaySettings.Mode == GameData.OverlaySettings.DisplayMode.WhenLookingAt)
                         {
                             canShow = true;
                         }
