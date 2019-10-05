@@ -21,6 +21,16 @@ namespace FFRadarBuddy
         private float lastFov = 0;
         private float aspectRatio = 0;
 
+        private Bitmap overlayImage = null;
+        private Font labelFont = new Font(FontFamily.GenericSansSerif, 8.0f);
+        private Font labelFontLarge = new Font(FontFamily.GenericSansSerif, 10.0f, FontStyle.Bold);
+        private Brush labelBackgroundBrush = new SolidBrush(Color.FromArgb(64, Color.Black));
+        private Brush labelForegroundBrush = new SolidBrush(Color.FromArgb(192, Color.White));
+        private float highlightAnimAlpha = 0;
+
+        private float maxProjectedDistFromCenter = 0.5f;
+        private float maxDistanceFromCamera = 100.0f;
+
         public OverlayForm()
         {
             InitializeComponent();
@@ -41,51 +51,8 @@ namespace FFRadarBuddy
             UpdateOverlayPosition();
         }
 
-        [DllImport("user32.dll")]
-        static extern int GetWindowLong(IntPtr hWnd, int index);
-
-        [DllImport("user32.dll")]
-        static extern int SetWindowLong(IntPtr hWnd, int index, int newStyle);
-
-        [DllImport("user32.dll")]
-        static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
-
-        [DllImport("user32.dll")]
-        static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
-        private void OverlayForm_Load(object sender, EventArgs e)
-        {
-            const int WS_EX_TRANSPARENT = 0x00000020;
-            const int GWL_EXSTYLE = (-20);
-
-            IntPtr hWindow = this.Handle;
-            int extendedStyle = GetWindowLong(hWindow, GWL_EXSTYLE);
-            SetWindowLong(hWindow, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT);
-        }
-
         private void UpdateOverlayPosition()
         {
-            Logger.WriteLine("Camera fov:{0}, pos:[{1:0.00},{2:0.00},{3:0.00}], target:[{4:0.00},{5:0.00},{6:0.00}]",
-               gameData.camera.Fov,
-               gameData.camera.Position.X, gameData.camera.Position.Y, gameData.camera.Position.Z,
-               gameData.camera.Target.X, gameData.camera.Target.Y, gameData.camera.Target.Z);
-
             Process gameProcess = (gameData != null && gameData.memoryScanner != null) ? gameData.memoryScanner.GetProcess() : null;
             if (gameProcess != null && gameProcess.MainWindowHandle != IntPtr.Zero)
             {
@@ -95,11 +62,16 @@ namespace FFRadarBuddy
 
                 Left = testPt.X;
                 Top = testPt.Y;
-                Width = gameClientRect.Right - gameClientRect.Left;
-                Height = gameClientRect.Bottom - gameClientRect.Top;
-                aspectRatio = (float)Width / (float)Height;
-
-                projectionTM = (gameData.camera.Fov > 0) ? Matrix4x4.CreatePerspectiveFieldOfView(gameData.camera.Fov, aspectRatio, cameraNearPlane, cameraFarPlane) : Matrix4x4.Identity;
+                int NewWidth = gameClientRect.Right - gameClientRect.Left;
+                int NewHeight = gameClientRect.Bottom - gameClientRect.Top;
+                if (NewWidth != Width || NewHeight != Height)
+                {
+                    Width = NewWidth;
+                    Height = NewHeight;
+                    aspectRatio = (float)Width / (float)Height;
+                    projectionTM = (gameData.camera.Fov > 0) ? Matrix4x4.CreatePerspectiveFieldOfView(gameData.camera.Fov, aspectRatio, cameraNearPlane, cameraFarPlane) : Matrix4x4.Identity;
+                    overlayImage = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
+                }
             }
         }
 
@@ -117,25 +89,241 @@ namespace FFRadarBuddy
                 gameToScreenTM = viewTM * projectionTM;
             }
 
-            Invalidate();
+            highlightAnimAlpha = (highlightAnimAlpha >= 1.0f) ? 0.0f : (highlightAnimAlpha + 0.05f);
+            UpdateOverlayBitmap();
         }
 
-        private void OverlayForm_Paint(object sender, PaintEventArgs e)
+        private bool CanShowActor(GameData.ActorItem actor, Vector3 projectedPt)
+        {
+            bool canShow = false;
+            if (projectedPt.Z > 0)
+            {
+                if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.Always || actor.OverlaySettings.IsHighlighted)
+                {
+                    canShow = true;
+                }
+                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenClose)
+                {
+                    canShow = (actor.Distance < maxDistanceFromCamera);
+                }
+                else if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenLookingAt || actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenCloseAndLookingAt)
+                {
+                    float distFromCenterSq = ((projectedPt.X / projectedPt.Z) * (projectedPt.X / projectedPt.Z)) + ((projectedPt.Y / projectedPt.Z) * (projectedPt.Y / projectedPt.Z));
+                    if (distFromCenterSq < (maxProjectedDistFromCenter * maxProjectedDistFromCenter))
+                    {
+                        if (actor.OverlaySettings.Mode == GameData.OverlaySettings.LabelMode.WhenLookingAt)
+                        {
+                            canShow = true;
+                        }
+                        else
+                        {
+                            canShow = (actor.Distance < maxDistanceFromCamera);
+                        }
+                    }
+                }
+            }
+
+            return canShow;
+        }
+
+        private void DrawActorLabelSimple(GameData.ActorItem actor, Vector2 canvasPt, Graphics graphics, float markerRadius, Font useFont)
+        {
+            SizeF drawTextSize = graphics.MeasureString(actor.OverlaySettings.Description, useFont);
+            float textPosX = canvasPt.X - (drawTextSize.Width * 0.5f);
+            float textPosY = canvasPt.Y + markerRadius + 2;
+
+            graphics.FillRectangle(labelBackgroundBrush, textPosX - 2, textPosY, drawTextSize.Width + 4, drawTextSize.Height);
+            graphics.DrawString(actor.OverlaySettings.Description, useFont, labelForegroundBrush, textPosX, textPosY);
+        }
+
+        private void DrawActorLabelFancy(GameData.ActorItem actor, Vector2 canvasPt, Graphics graphics, float markerRadius, Font useFont)
+        {
+            const float markerOffset = 5;
+
+            SizeF drawTextSize = graphics.MeasureString(actor.OverlaySettings.Description, useFont);
+            float textPosX = canvasPt.X + (markerOffset * 2);
+            float anchorX0 = canvasPt.X + markerRadius - 1;
+            float anchorX1 = textPosX - 2;
+            float anchorX2 = textPosX + drawTextSize.Width + 2;
+
+            if (anchorX2 > Width)
+            {
+                textPosX = canvasPt.X - drawTextSize.Width - (markerOffset * 2);
+                anchorX2 = textPosX - 2;
+                anchorX1 = textPosX + drawTextSize.Width + 2;
+                anchorX0 = canvasPt.X - markerRadius + 1;
+            }
+
+            float textPosY = canvasPt.Y - markerOffset - drawTextSize.Height;
+            float anchorY = textPosY + drawTextSize.Height;
+            float anchorY0 = canvasPt.Y - markerRadius + 1;
+
+            if (textPosY < 0)
+            {
+                textPosY = canvasPt.Y + markerOffset;
+                anchorY = textPosY;
+                anchorY0 = canvasPt.Y + markerRadius - 1;
+            }
+
+            graphics.FillRectangle(labelBackgroundBrush, textPosX - 2, textPosY, drawTextSize.Width + 4, drawTextSize.Height);
+            graphics.DrawString(actor.OverlaySettings.Description, useFont, labelForegroundBrush, textPosX, textPosY);
+            graphics.DrawLine(actor.OverlaySettings.DrawPen, anchorX0, anchorY0, anchorX1, anchorY);
+            graphics.DrawLine(actor.OverlaySettings.DrawPen, anchorX1, anchorY, anchorX2, anchorY);
+        }
+
+        private void DrawOverlay(Graphics graphics)
         {
             float canvasHalfX = (float)Width / 2;
             float canvasHalfY = (float)Height / 2;
-            float markerHalfSize = 3;
+            const float markerRadius = 3;
 
             foreach (GameData.ActorItem actor in gameData.listActors)
             {
                 Vector3 projectedPt = Vector3.Transform(actor.Position, gameToScreenTM);
-                if (projectedPt.Z > 0)
+                bool bCanShow = CanShowActor(actor, projectedPt);
+                if (bCanShow)
                 {
                     Vector2 canvasPt = new Vector2(canvasHalfX + (projectedPt.X / projectedPt.Z * canvasHalfX), canvasHalfY - (projectedPt.Y / projectedPt.Z * canvasHalfY));
 
-                    e.Graphics.DrawRectangle(Pens.Red, canvasPt.X - markerHalfSize, canvasPt.Y - markerHalfSize, markerHalfSize * 2, markerHalfSize * 2);
+                    graphics.DrawEllipse(actor.OverlaySettings.DrawPen, canvasPt.X - markerRadius, canvasPt.Y - markerRadius, markerRadius * 2, markerRadius * 2);
+                    if (actor.OverlaySettings.IsHighlighted)
+                    {
+                        float highlightRadius = markerRadius + (highlightAnimAlpha * 50.0f);
+                        using (Pen highlightPen = new Pen(Color.FromArgb((int)(255 * (1.0f - highlightAnimAlpha)), actor.OverlaySettings.DrawPen.Color)))
+                        {
+                            graphics.DrawEllipse(highlightPen, canvasPt.X - highlightRadius, canvasPt.Y - highlightRadius, highlightRadius * 2, highlightRadius * 2);
+                        }
+
+                        DrawActorLabelFancy(actor, canvasPt, graphics, markerRadius, labelFontLarge);
+                    }
+                    else
+                    {
+                        DrawActorLabelSimple(actor, canvasPt, graphics, markerRadius, labelFont);
+                    }
                 }
             }
         }
+
+        private void UpdateOverlayBitmap()
+        {
+            if (overlayImage == null)
+            {
+                return;
+            }
+
+            using (Graphics graphics = Graphics.FromImage(overlayImage))
+            {
+                graphics.Clear(Color.Transparent);
+                DrawOverlay(graphics);
+            }
+
+            IntPtr screenDC = GetDC(IntPtr.Zero);
+            IntPtr overlayDC = CreateCompatibleDC(screenDC);
+            IntPtr hBitmap = IntPtr.Zero;
+            IntPtr hBitmapPrev = IntPtr.Zero;
+
+            try
+            {
+                hBitmap = overlayImage.GetHbitmap(Color.FromArgb(0));
+                hBitmapPrev = SelectObject(overlayDC, hBitmap);
+
+                SIZE windowSize = new SIZE() { Width = overlayImage.Width, Heigth = overlayImage.Height };
+                POINT windowsPos = new POINT() { X = Left, Y = Top };
+                POINT overlayOrigin = new POINT() { X = 0, Y = 0 };
+
+                const int AC_SRC_OVER = 0x0;
+                const int AC_SRC_ALPHA = 0x1;
+                BLENDFUNCTION blendFunc = new BLENDFUNCTION() { BlendOp = AC_SRC_OVER, BlendFlags = 0, SourceConstantAlpha = 255, AlphaFormat = AC_SRC_ALPHA };
+
+                const int ULW_ALPHA = 0x2;
+                UpdateLayeredWindow(Handle, screenDC, ref windowsPos, ref windowSize, overlayDC, ref overlayOrigin, 0, ref blendFunc, ULW_ALPHA);
+            }
+            finally
+            {
+                ReleaseDC(IntPtr.Zero, screenDC);
+                if (hBitmap != IntPtr.Zero)
+                {
+                    SelectObject(overlayDC, hBitmapPrev);
+                    DeleteObject(hBitmap);
+                }
+                DeleteDC(overlayDC);
+            }
+        }
+
+        #region Native Stuff
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SIZE
+        {
+        	public int Width;
+            public int Heigth;
+     	}
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct BLENDFUNCTION
+        {
+            public byte BlendOp;
+            public byte BlendFlags;
+            public byte SourceConstantAlpha;
+            public byte AlphaFormat;
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        static extern bool UpdateLayeredWindow(IntPtr hWnd, IntPtr hdcDest, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        static extern bool DeleteDC(IntPtr hDC);
+
+        [DllImport("gdi32.dll")]
+        static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+
+        [DllImport("gdi32.dll")]
+        static extern bool DeleteObject(IntPtr hObject);
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int WS_EX_LAYERED = 0x00080000;
+                const int WS_EX_TRANSPARENT = 0x00000020;
+
+                CreateParams windowParams = base.CreateParams;
+                windowParams.ExStyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT;
+                return windowParams;
+            }
+        }
+
+        #endregion
     }
 }

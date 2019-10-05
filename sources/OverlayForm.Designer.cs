@@ -51,9 +51,6 @@
             this.ShowInTaskbar = false;
             this.Text = "OverlayForm";
             this.TopMost = true;
-            this.TransparencyKey = System.Drawing.Color.White;
-            this.Load += new System.EventHandler(this.OverlayForm_Load);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.OverlayForm_Paint);
             this.ResumeLayout(false);
 
         }

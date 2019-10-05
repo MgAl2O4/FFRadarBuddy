@@ -1,6 +1,12 @@
 ﻿using System.Collections;
 using System.Windows.Forms;
 
+public enum ListSortMode
+{
+    String,
+    Number,
+}
+
 /// <summary>
 /// This class is an implementation of the 'IComparer' interface.
 /// </summary>
@@ -19,6 +25,19 @@ public class ListViewColumnSorter : IComparer
     /// </summary>
     private CaseInsensitiveComparer ObjectCompare;
 
+    class NumberComparer : IComparer
+    {
+        public int Compare(object x, object y)
+        {
+            float numX = float.Parse((string)x);
+            float numY = float.Parse((string)y);
+            return numX.CompareTo(numY);
+        }
+    }
+
+    private NumberComparer NumberCompare;
+    public ListSortMode Mode;
+
     /// <summary>
     /// Class constructor.  Initializes various elements
     /// </summary>
@@ -32,6 +51,9 @@ public class ListViewColumnSorter : IComparer
 
         // Initialize the CaseInsensitiveComparer object
         ObjectCompare = new CaseInsensitiveComparer();
+
+        NumberCompare = new NumberComparer();
+        Mode = ListSortMode.String;
     }
 
     /// <summary>
@@ -50,7 +72,8 @@ public class ListViewColumnSorter : IComparer
         listviewY = (ListViewItem)y;
 
         // Compare the two items
-        compareResult = ObjectCompare.Compare(listviewX.SubItems[ColumnToSort].Text, listviewY.SubItems[ColumnToSort].Text);
+        IComparer comparer = (Mode == ListSortMode.String) ? (IComparer)ObjectCompare : (IComparer)NumberCompare;
+        compareResult = comparer.Compare(listviewX.SubItems[ColumnToSort].Text, listviewY.SubItems[ColumnToSort].Text);
 
         // Calculate correct return value based on object comparison
         if (OrderOfSort == SortOrder.Ascending)

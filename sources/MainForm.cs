@@ -15,6 +15,7 @@ namespace FFRadarBuddy
         private GameData gameData = new GameData();
         private OverlayForm overlay = new OverlayForm();
         private ListViewColumnSorter actorListSorter = new ListViewColumnSorter();
+        private GameData.ActorItem selectedActor = null;
 
         public MainForm()
         {
@@ -28,25 +29,71 @@ namespace FFRadarBuddy
 
             overlay.gameData = gameData;
             overlay.Show();
-            //overlay.SetupRepro();
         }
 
-        private void GameData_OnActorListChanged(List<GameData.ActorItem> addedEntries)
+        private void GameData_OnActorListChanged()
         {
-            listViewActors.Items.Clear();
-            foreach (GameData.ActorItem actor in gameData.listActors)
-            {
-                ListViewItem lvi = new ListViewItem(actor.ShowName);
-                lvi.Tag = actor.ActorId;
-                lvi.SubItems.Add(actor.ShowType);
-                lvi.SubItems.Add(actor.ShowId);
-                lvi.SubItems.Add(actor.ShowDistance);
-                lvi.SubItems.Add(actor.ShowPos);
+            listViewActors.SuspendLayout();
 
-                listViewActors.Items.Add(lvi);
+            // remove missing
+            for (int Idx = listViewActors.Items.Count - 1; Idx >= 0; Idx--)
+            {
+                GameData.ActorItem tagActor = (GameData.ActorItem)listViewActors.Items[Idx].Tag;
+                if (!gameData.listActors.Contains(tagActor))
+                {
+                    listViewActors.Items.RemoveAt(Idx);
+                }
             }
 
+            // add new
+            if (listViewActors.Items.Count < gameData.listActors.Count)
+            {
+                List<GameData.ActorItem> knownActors = new List<GameData.ActorItem>();
+                for (int Idx = 0; Idx < listViewActors.Items.Count; Idx++)
+                {
+                    GameData.ActorItem tagActor = (GameData.ActorItem)listViewActors.Items[Idx].Tag;
+                    knownActors.Add(tagActor);
+                }
+
+                foreach (GameData.ActorItem actor in gameData.listActors)
+                {
+                    if (!knownActors.Contains(actor))
+                    {
+                        ListViewItem lvi = new ListViewItem(actor.ShowName);
+                        lvi.Tag = actor;
+                        lvi.SubItems.Add(actor.ShowType);
+                        lvi.SubItems.Add(actor.ShowId);
+                        lvi.SubItems.Add(actor.ShowDistance);
+
+                        listViewActors.Items.Add(lvi);
+
+                        // apply overlay settings - TODO: filters
+                        actor.OverlaySettings.Mode = GameData.OverlaySettings.LabelMode.WhenClose;
+                        actor.OverlaySettings.Description = actor.ShowName;
+                        actor.OverlaySettings.DrawPen = Pens.Red;
+                    }
+                }
+            }
+
+            listViewActors.ResumeLayout();
             listViewActors.Sort();
+        }
+
+        private void UpdateShownDistance()
+        {
+            for (int Idx = 0; Idx < listViewActors.Items.Count; Idx++)
+            {
+                GameData.ActorItem tagActor = (GameData.ActorItem)listViewActors.Items[Idx].Tag;
+                if (tagActor != null)
+                {
+                    listViewActors.Items[Idx].SubItems[3].Text = tagActor.ShowDistance;
+                }
+            }
+
+            if (actorListSorter.SortColumn == columnHeaderDistance.Index)
+            {
+                listViewActors.Sort();
+            }
         }
 
         private void GameData_OnScannerStateChanged(GameData.ScannerState newState)
@@ -99,6 +146,8 @@ namespace FFRadarBuddy
                 actorListSorter.Order = SortOrder.Ascending;
             }
 
+            actorListSorter.Mode = (e.Column == columnHeaderDistance.Index) ? ListSortMode.Number : ListSortMode.String;
+
             // Perform the sort with these new sort options.
             listViewActors.Sort();
         }
@@ -107,6 +156,27 @@ namespace FFRadarBuddy
         {
             gameData.Tick();
             overlay.Tick();
+            UpdateShownDistance();
+        }
+
+        private void listViewActors_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (selectedActor != null)
+            {
+                selectedActor.OverlaySettings.IsHighlighted = false;
+                selectedActor = null;
+            }
+
+            if (listViewActors.SelectedItems.Count == 1)
+            {
+                selectedActor = (GameData.ActorItem)listViewActors.SelectedItems[0].Tag;
+                selectedActor.OverlaySettings.IsHighlighted = true;
+            }
+            else
+            {
+                int a = 1;
+                a++;
+            }
         }
     }
 }

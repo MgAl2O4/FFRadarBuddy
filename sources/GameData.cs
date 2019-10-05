@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
 
 namespace FFRadarBuddy
 {
@@ -12,6 +14,28 @@ namespace FFRadarBuddy
             Ready,
         }
 
+        public class OverlaySettings
+        {
+            public enum LabelMode
+            {
+                Never,
+                WhenLookingAt,
+                WhenClose,
+                WhenCloseAndLookingAt,
+                Always,
+            }
+
+            public bool IsHighlighted = false;
+            public LabelMode Mode = LabelMode.WhenLookingAt;
+            public Pen DrawPen = Pens.Black;
+            public string Description;
+
+            public override string ToString()
+            {
+                return Description + ", mode:" + Mode + (IsHighlighted ? ", Highlighted!" : "");
+            }
+        }
+
         public class ActorItem : MemoryLayout.ActorData
         {
             public string ShowName { get { return Name; } }
@@ -21,6 +45,7 @@ namespace FFRadarBuddy
             public string ShowDistance { get { return Distance.ToString("0.0"); } }
             public int LastScanPass = 0;
             public float Distance = 0.0f;
+            public OverlaySettings OverlaySettings = new OverlaySettings();
 
             public override string ToString()
             {
@@ -31,7 +56,7 @@ namespace FFRadarBuddy
         public List<ActorItem> listActors = new List<ActorItem>();
         public MemoryLayout.CameraData camera = new MemoryLayout.CameraData();
 
-        public delegate void ActorListChanged(List<ActorItem> addedEntries);
+        public delegate void ActorListChanged();
         public event ActorListChanged OnActorListChanged;
 
         public delegate void ScannerStateChanged(ScannerState newState);
@@ -95,35 +120,45 @@ namespace FFRadarBuddy
         {
             try
             {
-                List<ActorItem> addedActors = new List<ActorItem>();
                 actorScanPass++;
+                bool hasChanges = false;
 
                 long TableReadAddr = MemoryLayout.memPathActors.GetResolvedAddress();
                 if (TableReadAddr != 0)
                 {
+                    List<long> KnownAddr = new List<long>();
                     for (long ActorIdx = 0; ActorIdx < 500; ActorIdx++, TableReadAddr += 8)
                     {
                         long ActorAddr = memoryScanner.ReadPointer(TableReadAddr);
-                        if (ActorAddr != 0)
+                        if (ActorAddr != 0 && !KnownAddr.Contains(ActorAddr))
                         {
                             byte[] entryData = memoryScanner.ReadBytes(ActorAddr, MemoryLayout.ActorConsts.Size);
                             if (entryData != null)
                             {
-                                ActorItem foundItem = listActors.Find(x => (x.MemAddress == ActorAddr));
-                                if (foundItem == null)
-                                {
-                                    ActorItem entryActor = new ActorItem();
-                                    entryActor.Set(ActorAddr, entryData);
-                                    entryActor.LastScanPass = actorScanPass;
+                                KnownAddr.Add(ActorAddr);
 
-                                    addedActors.Add(entryActor);
-                                    listActors.Add(entryActor);
-                                }
-                                else
+                                ActorItem entryActor = new ActorItem();
+                                entryActor.SetIdOnly(entryData);
+
+                                bool bFound = false;
+                                for (int ExistingIdx = 0; ExistingIdx < listActors.Count; ExistingIdx++)
                                 {
-                                    foundItem.Set(ActorAddr, entryData);
-                                    foundItem.LastScanPass = actorScanPass;
+                                    if (listActors[ExistingIdx].UniqueId == entryActor.UniqueId)
+                                    {
+                                        entryActor = listActors[ExistingIdx];
+                                        bFound = true;
+                                    }
                                 }
+
+                                if (!bFound)
+                                {
+                                    listActors.Add(entryActor);
+                                    hasChanges = true;
+                                }
+
+                                entryActor.SetDataOnly(entryData);
+                                entryActor.LastScanPass = actorScanPass;
+                                entryActor.Distance = Vector3.Distance(entryActor.Position, camera.Position);
                             }
                         }
                     }
@@ -134,10 +169,14 @@ namespace FFRadarBuddy
                     if (listActors[Idx].LastScanPass != actorScanPass)
                     {
                         listActors.RemoveAt(Idx);
+                        hasChanges = true;
                     }
                 }
 
-                OnActorListChanged?.Invoke(addedActors);
+                if (hasChanges)
+                {
+                    OnActorListChanged?.Invoke();
+                }
             }
             catch (Exception) { }
         }
@@ -152,7 +191,7 @@ namespace FFRadarBuddy
                     byte[] cameraInfoData = memoryScanner.ReadBytes(cameraAddr, MemoryLayout.CameraConsts.Size);
                     if (cameraInfoData != null)
                     {
-                        camera.Set(cameraAddr, cameraInfoData);
+                        camera.Set(cameraInfoData);
                         return true;
                     }
                 }

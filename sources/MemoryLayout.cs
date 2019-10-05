@@ -53,10 +53,9 @@ namespace FFRadarBuddy
             Aetheryte = 5,
             Gathering = 6,
             Interaction = 7,
-            MountType = 8,
+            Mount = 8,
             Minion = 9,
             Retainer = 10,
-            Area = 11,
             Housing = 12,
         }
 
@@ -64,7 +63,6 @@ namespace FFRadarBuddy
 
         public class ActorData
         {
-            public long MemAddress;
             public string Name;
             public uint ActorId;
             public uint NpcId;
@@ -72,15 +70,20 @@ namespace FFRadarBuddy
             public byte SubType;
             public Vector3 Position = new Vector3();
             public float Radius;
+            public long UniqueId;
 
             public ActorData() { }
-            public ActorData(long addr, byte[] bytes) { Set(addr, bytes); }
+            public ActorData(byte[] bytes) { Set(bytes); }
 
-            public void Set(long addr, byte[] bytes)
+            public void SetIdOnly(byte[] bytes)
             {
-                MemAddress = addr;
                 ActorId = BitConverter.ToUInt32(bytes, ActorConsts.ActorId);
                 NpcId = BitConverter.ToUInt32(bytes, ActorConsts.NpcId);
+                UniqueId = ((long)ActorId << 32) | NpcId;
+            }
+
+            public void SetDataOnly(byte[] bytes)
+            {
                 Type = (ActorType)bytes[ActorConsts.Type];
                 SubType = bytes[ActorConsts.SubType];
                 Position.X = BitConverter.ToSingle(bytes, ActorConsts.Position);
@@ -104,37 +107,39 @@ namespace FFRadarBuddy
 
                 Name = Encoding.UTF8.GetString(stringBytes);
             }
+
+            public void Set(byte[] bytes)
+            {
+                SetIdOnly(bytes);
+                SetDataOnly(bytes);
+            }
         }
 
         public class TargetData
         {
-            public long MemAddress;
             public long CurrentAddress;
 
             public TargetData() { }
-            public TargetData(long addr, byte[] bytes) { Set(addr, bytes); }
+            public TargetData(byte[] bytes) { Set(bytes); }
 
-            public void Set(long addr, byte[] bytes)
+            public void Set(byte[] bytes)
             {
-                MemAddress = addr;
                 CurrentAddress = BitConverter.ToInt64(bytes, TargetConsts.Current);
             }
         }
 
         public class CameraData
         {
-            public long MemAddress;
             public float Fov;
             public float Distance;
             public Vector3 Position = new Vector3();
             public Vector3 Target = new Vector3();
 
             public CameraData() { }
-            public CameraData(long addr, byte[] bytes) { Set(addr, bytes); }
+            public CameraData(byte[] bytes) { Set(bytes); }
 
-            public void Set(long addr, byte[] bytes)
+            public void Set(byte[] bytes)
             {
-                MemAddress = addr;
                 Fov = BitConverter.ToSingle(bytes, CameraConsts.Fov);
                 Distance = BitConverter.ToSingle(bytes, CameraConsts.Distance);
                 Position.X = BitConverter.ToSingle(bytes, CameraConsts.Position);
