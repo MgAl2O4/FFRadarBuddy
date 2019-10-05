@@ -41,6 +41,7 @@ namespace FFRadarBuddy
             public string ShowName { get { return Name; } }
             public string ShowType { get { return Type + ":" + SubType; } }
             public string ShowId { get { return "0x" + NpcId.ToString("x"); } }
+            public string ShowActorId { get { return string.Format("{0:x}:{1:x}", ActorIdA, ActorIdB); } }
             public string ShowPos { get { return string.Format("[{0:0.0}, {1:0.0}, {2:0.0}]", Position.X, Position.Y, Position.Z); } }
             public string ShowDistance { get { return Distance.ToString("0.0"); } }
             public int LastScanPass = 0;

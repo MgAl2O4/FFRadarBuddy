@@ -20,7 +20,8 @@ namespace FFRadarBuddy
             public const int Size = 200;
 
             public const int Name = 48;             // string
-            public const int ActorId = 116;         // uint32
+            public const int ActorIdA = 116;        // uint32
+            public const int ActorIdB = 120;        // uint32
             public const int NpcId = 128;           // uint32
             public const int Type = 140;            // uint8
             public const int SubType = 141;         // uint8
@@ -64,7 +65,8 @@ namespace FFRadarBuddy
         public class ActorData
         {
             public string Name;
-            public uint ActorId;
+            public uint ActorIdA;
+            public uint ActorIdB;
             public uint NpcId;
             public ActorType Type;
             public byte SubType;
@@ -77,9 +79,13 @@ namespace FFRadarBuddy
 
             public void SetIdOnly(byte[] bytes)
             {
-                ActorId = BitConverter.ToUInt32(bytes, ActorConsts.ActorId);
+                ActorIdA = BitConverter.ToUInt32(bytes, ActorConsts.ActorIdA);
+                ActorIdB = BitConverter.ToUInt32(bytes, ActorConsts.ActorIdB);
                 NpcId = BitConverter.ToUInt32(bytes, ActorConsts.NpcId);
-                UniqueId = ((long)ActorId << 32) | NpcId;
+
+                UniqueId = (ActorIdB != 0) ? ActorIdB : ActorIdA;
+                UniqueId <<= 32;
+                UniqueId |= NpcId;
             }
 
             public void SetDataOnly(byte[] bytes)
