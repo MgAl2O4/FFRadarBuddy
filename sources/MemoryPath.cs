@@ -56,10 +56,15 @@ namespace FFRadarBuddy
             long Address = scanner.GetBaseAddress();
             try
             {
+                //Logger.WriteLine("Resolving '" + this + "'... base:" + Address.ToString("x8"));
+
                 Address += PointerPath[0];
+                //Logger.WriteLine(">> [0]: " + Address.ToString("x8"));
+
                 for (int Idx = 1; Idx < PointerPath.Length; Idx++)
                 {
                     Address = scanner.ReadPointer(Address) + PointerPath[Idx];
+                    //Logger.WriteLine(">> [" + Idx + "]: " + Address.ToString("x8"));
                 }
 
                 ResolvedAddress = Address;
@@ -160,23 +165,48 @@ namespace FFRadarBuddy
             ResolvedAddress = 0;
             try
             {
+                /* Look for lea opcode and use it to calculate first part of jump
+                 * Example:  
+                 *                
+                 * ffxiv_dx11.exe+FC1E32 - 48 8B 42 08           - mov rax,[rdx+08]
+                 * ffxiv_dx11.exe+FC1E36 - 48 C1 E8 03           - shr rax,03 { 3 }
+                 * ffxiv_dx11.exe+FC1E3A - 3D A7010000           - cmp eax,000001A7 { 423 }
+                 * ffxiv_dx11.exe+FC1E3F - 77 24                 - ja ffxiv_dx11.exe+FC1E65
+                 * ffxiv_dx11.exe+FC1E41 - 8B C0                 - mov eax, eax
+                 * ffxiv_dx11.exe+FC1E43 - 48 8D 0D 662FB900     - lea rcx, [ffxiv_dx11.exe+1B54DB0] { (0) }
+                 *
+                 * Steps:
+                 * > sig chunk of opcodes leading to lea's offset
+                 * > current addr of offset: ffxiv_dx11.exe+FC1E46
+                 * > read 662FB900 part: 0x009b2f66
+                 * > add 4
+                 * > result: ffxiv_dx11.exe+1B54DB0
+                 */
+
                 // sig match: start of opcode sequence
                 // move to end and do short jump
                 PatternJumpAddress = scanner.FindPatternMatchFull(PatternBytes, PatternMask);
+                //Logger.WriteLine("Resolving '" + this + "'... patternStart:" + PatternJumpAddress.ToString("x8"));
+
                 if (PatternJumpAddress != 0)
                 {
                     long NextAddress = PatternJumpAddress + PatternBytes.Length;
-                    int ShortJumpOffset = scanner.ReadInt(NextAddress);
-                    NextAddress += ShortJumpOffset + 4;
+                    int LeaOffset = scanner.ReadInt(NextAddress);
+                    //Logger.WriteLine(">> [0]: offset:" + LeaOffset.ToString("x4") + " at " + NextAddress.ToString("x8"));
+
+                    NextAddress += LeaOffset + 4;
+                    //Logger.WriteLine(">> [0]: adjusted:" + NextAddress.ToString("x8"));
 
                     for (int Idx = 0; Idx < PointerPath.Length - 1; Idx++)
                     {
                         NextAddress = scanner.ReadPointer(NextAddress + PointerPath[Idx]);
+                        //Logger.WriteLine(">> [" + Idx + "]:" + NextAddress.ToString("x8"));
                     }
 
                     if (PointerPath.Length > 0)
                     {
                         NextAddress += PointerPath.Last();
+                        //Logger.WriteLine(">> [last]:" + NextAddress.ToString("x8") + " (offset only)");
                     }
 
                     ResolvedAddress = NextAddress;

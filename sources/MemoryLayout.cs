@@ -13,7 +13,7 @@ namespace FFRadarBuddy
 
         public static MemoryPath memPathActors = new MemoryPathSignature("488b420848c1e8033da701000077248bc0488d0d", 0);
         public static MemoryPath memPathTarget = new MemoryPathSignature("41bc000000e041bd01000000493bc47555488d0d", 144);
-        public static MemoryPath memPathCamera = new MemoryPath(0x1B28530, 0);
+        public static MemoryPath memPathCamera = new MemoryPathSignature("4c897c242083f8ff75054533ffeb0d48984c8d3d", 0, 0);
 
         public class ActorConsts
         {
