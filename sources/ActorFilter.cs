@@ -106,12 +106,14 @@ namespace FFRadarBuddy
         public string Name;
         public bool ShowOnlyMatching;
         public List<ActorFilter> Filters;
+        public int version;
 
         public ActorFilterPreset()
         {
             Name = "Preset";
             ShowOnlyMatching = false;
             Filters = new List<ActorFilter>();
+            version = 1;
         }
 
         public void Apply(GameData.ActorItem actor)
@@ -142,6 +144,8 @@ namespace FFRadarBuddy
                 Name = jsonOb["name"];
                 ShowOnlyMatching = (JsonParser.BoolValue)jsonOb["onlyMatching"];
 
+                version = jsonOb.entries.ContainsKey("ver") ? (JsonParser.IntValue)jsonOb["ver"] : 1;
+
                 JsonParser.ArrayValue arrFilters = (JsonParser.ArrayValue)jsonOb["filters"];
                 foreach (JsonParser.Value v in arrFilters.entries)
                 {
@@ -171,6 +175,11 @@ namespace FFRadarBuddy
 
             writer.WriteString(Name, "name");
             writer.WriteBool(ShowOnlyMatching, "onlyMatching");
+
+            if (version > 1)
+            {
+                writer.WriteInt(version, "ver");
+            }
 
             writer.WriteArrayStart("filters");
             foreach (ActorFilter filter in Filters)

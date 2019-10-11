@@ -18,6 +18,7 @@ namespace FFRadarBuddy
         private ListViewColumnSorter actorListSorter = new ListViewColumnSorter();
         private GameData.ActorItem selectedActor = null;
         private ActorFilterPreset activePreset = null;
+        private bool ignorePresetSelection = false;
 
         public MainForm()
         {
@@ -32,6 +33,7 @@ namespace FFRadarBuddy
             UpdatePresetList();
             RunUpdateCheck();
 
+            splitContainer2.Panel1Collapsed = true;
             listViewActors.ListViewItemSorter = actorListSorter;
 
             GameData_OnScannerStateChanged(GameData.ScannerState.MissingProcess);
@@ -225,7 +227,7 @@ namespace FFRadarBuddy
 
         private void RunUpdateCheck()
         {
-            Task updateTask = new Task(() => {
+            Task updateProgramTask = new Task(() => {
                 bool bFoundUpdate = GithubUpdater.FindAndDownloadUpdates(out string statusMsg);
 
                 Invoke((MethodInvoker)delegate
@@ -235,7 +237,25 @@ namespace FFRadarBuddy
                     labelUpdateNotify.BringToFront();
                 });
             });
-            updateTask.Start();
+
+            Task updatePresetsTask = new Task(() => {
+                List<string> onlinePresets = GithubUpdaterPresets.FindAndDownloadPresets(out string statusMsg);
+
+                Invoke((MethodInvoker)delegate
+                {
+                    Logger.WriteLine("Preset sync: " + statusMsg);
+                    MergeOnlinePresets(onlinePresets);
+
+                    buttonPresetOptions.Text = "Manage";
+                    buttonPresetOptions.Enabled = true;
+                });
+            });
+
+            buttonPresetOptions.Text = "Syncing...";
+            buttonPresetOptions.Enabled = false;
+
+            updateProgramTask.Start();
+            updatePresetsTask.Start();
         }
 
         private void labelUpdateNotify_Click(object sender, EventArgs e)
@@ -266,10 +286,75 @@ namespace FFRadarBuddy
             }
         }
 
+        private void MergeOnlinePresets(List<string> onlinePresets)
+        {
+            PlayerSettings settings = PlayerSettings.Get();
+            bool hasChanges = false;
+
+            for (int importIdx = 0; importIdx < onlinePresets.Count; importIdx++)
+            {
+                ActorFilterPreset testPreset = new ActorFilterPreset();
+                bool isValid = false;
+                try
+                {
+                    JsonParser.ObjectValue rootOb = JsonParser.ParseJson(onlinePresets[importIdx]);
+                    isValid = testPreset.LoadFromJson(rootOb);
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine("Failed to merge synced preset #" + importIdx + ": " + ex);
+                }
+
+                if (isValid)
+                {
+                    ActorFilterPreset existingPreset = settings.Presets.Find(x => x.Name == testPreset.Name);
+                    if (existingPreset != null && existingPreset.version >= testPreset.version)
+                    {
+                        Logger.WriteLine("Ignoring online preset #" + importIdx + ": " + testPreset.Name + " (v" + testPreset.version + ") => local version: " + existingPreset.version);
+                        continue;
+                    }
+
+                    if (existingPreset != null)
+                    {
+                        settings.Presets.Remove(existingPreset);
+                    }
+
+                    Logger.WriteLine("Using online preset #" + importIdx + ": " + testPreset.Name + " (v" + testPreset.version + ")");
+                    settings.Presets.Add(testPreset);
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                UpdatePresetList();
+            }
+        }
+
+        private void RefreshPresetDropdown()
+        {
+            int selected = comboBoxPreset.SelectedIndex;
+            ignorePresetSelection = true;
+
+            comboBoxPreset.Items.Clear();
+
+            PlayerSettings settings = PlayerSettings.Get();
+            foreach (ActorFilterPreset preset in settings.Presets)
+            {
+                comboBoxPreset.Items.Add(preset);
+            }
+
+            comboBoxPreset.SelectedIndex = selected;
+            ignorePresetSelection = false;
+        }
+
         private void comboBoxPreset_SelectedIndexChanged(object sender, EventArgs e)
         {
-            activePreset = comboBoxPreset.SelectedItem as ActorFilterPreset;
-            UpdatePresetFilters();
+            if (!ignorePresetSelection)
+            {
+                activePreset = comboBoxPreset.SelectedItem as ActorFilterPreset;
+                UpdatePresetFilters();
+            }
         }
 
         private void buttonPresetOptions_Click(object sender, EventArgs e)
@@ -438,6 +523,58 @@ namespace FFRadarBuddy
         private void contextMenuStripManagePresets_Opening(object sender, CancelEventArgs e)
         {
             e.Cancel = (listViewPresetManage.SelectedItems.Count == 0);
+
+            if (listViewPresetManage.SelectedItems.Count > 0)
+            {
+                toolStripPresetListTextBox.Text = listViewPresetManage.SelectedItems[0].Text;
+            }
+        }
+
+        private void listViewPresetManage_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            if (e.Item >= 0 && !string.IsNullOrEmpty(e.Label))
+            {
+                PlayerSettings settings = PlayerSettings.Get();
+
+                bool bAlreadyExisting = settings.Presets.Find(x => x.Name.Equals(e.Label, StringComparison.InvariantCultureIgnoreCase)) != null;
+                if (!bAlreadyExisting)
+                {
+                    ActorFilterPreset preset = (ActorFilterPreset)listViewPresetManage.Items[e.Item].Tag;
+                    preset.Name = e.Label;
+
+                    RefreshPresetDropdown();
+                }
+                else
+                {
+                    e.CancelEdit = true;
+                }
+            }
+            else
+            {
+                e.CancelEdit = true;
+            }
+        }
+
+        private void toolStripPresetListTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (listViewPresetManage.SelectedIndices.Count == 1)
+            {
+                LabelEditEventArgs changeArgs = new LabelEditEventArgs(listViewPresetManage.SelectedIndices[0], toolStripPresetListTextBox.Text);
+                listViewPresetManage_AfterLabelEdit(null, changeArgs);
+
+                if (!changeArgs.CancelEdit)
+                {
+                    listViewPresetManage.SelectedItems[0].Text = changeArgs.Label;
+                }
+            }
+        }
+
+        private void listViewPresetManage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listViewPresetManage.SelectedIndices.Count == 1)
+            {
+                comboBoxPreset.SelectedIndex = listViewPresetManage.SelectedIndices[0];
+            }
         }
 
         #endregion
@@ -471,6 +608,7 @@ namespace FFRadarBuddy
                 checkBoxShowOnlyMatching.Enabled = false;
             }
 
+            labelFilterHint.Visible = (activePreset != null) && (activePreset.Filters.Count == 0);
             UpdateOverlaySettings();
         }
 
@@ -496,17 +634,22 @@ namespace FFRadarBuddy
             GameData.ActorItem actor = (GameData.ActorItem)e.Data.GetData(typeof(GameData.ActorItem));
             Logger.WriteLine("Filter edit, drop: " + actor);
 
+            ActorFilter filterOb = new ActorFilter();
+            filterOb.Description = actor.ShowName;
+            filterOb.Pen = Pens.Gray;
+            filterOb.Mode = GameData.OverlaySettings.DisplayMode.WhenClose;
+            filterOb.MatchType = actor.Type;
+            filterOb.MatchNpcId = actor.NpcId;
+            filterOb.UseMatchType = true;
+            filterOb.UseMatchNpcId = (actor.Type != MemoryLayout.ActorType.Player);
+
+            CreateFilterItem(filterOb);
+        }
+
+        private void CreateFilterItem(ActorFilter filterOb)
+        { 
             if (activePreset != null)
             {
-                ActorFilter filterOb = new ActorFilter();
-                filterOb.Description = actor.ShowName;
-                filterOb.Pen = Pens.Gray;
-                filterOb.Mode = GameData.OverlaySettings.DisplayMode.WhenClose;
-                filterOb.MatchType = actor.Type;
-                filterOb.MatchNpcId = actor.NpcId;
-                filterOb.UseMatchType = true;
-                filterOb.UseMatchNpcId = (actor.Type != MemoryLayout.ActorType.Player);
-
                 if (!filterOb.UseMatchNpcId)
                 {
                     filterOb.Description = "";
@@ -525,6 +668,8 @@ namespace FFRadarBuddy
 
                 listViewPresetEdit.Items.Add(lvi);
             }
+
+            labelFilterHint.Visible = (activePreset != null) && (activePreset.Filters.Count == 0);
         }
 
         private void UpdateFilterItem(ListViewItem lvi)
@@ -594,6 +739,7 @@ namespace FFRadarBuddy
                 {
                     ActorFilter filterTag = (ActorFilter)listViewPresetEdit.SelectedItems[0].Tag;
                     activePreset.Filters.Remove(filterTag);
+
                     UpdatePresetFilters();
                 }
             }
@@ -601,57 +747,69 @@ namespace FFRadarBuddy
 
         private void contextMenuStripFilters_Opening(object sender, CancelEventArgs e)
         {
-            e.Cancel = (activePreset == null) || (listViewPresetEdit.SelectedItems.Count != 1);
+            bool bHasFilter = (activePreset != null) && (listViewPresetEdit.SelectedItems.Count == 1);
+            foreach (ToolStripItem item in contextMenuStripFilters.Items)
+            {
+                item.Visible = bHasFilter;
+            }
+
+            toolStripMenuItemAddFilter.Visible = !bHasFilter;
         }
 
         private void contextMenuStripFilters_Opened(object sender, EventArgs e)
         {
-            ActorFilter filterTag = (ActorFilter)listViewPresetEdit.SelectedItems[0].Tag;
-            contextMenuStripFilters.Tag = filterTag;
-
-            toolStripMenuItemOverrideName.Checked = filterTag.HasDescriptionOverride;
-            toolStripMenuItemMatchType.Checked = filterTag.UseMatchType;
-            toolStripMenuItemMatchId.Checked = filterTag.UseMatchNpcId;
-            toolStripTextBoxNameOverrride.Text = string.IsNullOrEmpty(filterTag.Description) ? "??" : filterTag.Description;
-            toolStripTextBoxMatchId.Text = filterTag.MatchNpcId.ToString();
-
-            toolStripComboBoxLabelMode.Items.Clear();
-            foreach (GameData.OverlaySettings.DisplayMode v in Enum.GetValues(typeof(GameData.OverlaySettings.DisplayMode)))
+            bool bHasFilter = (activePreset != null) && (listViewPresetEdit.SelectedItems.Count == 1);
+            if (bHasFilter)
             {
-                toolStripComboBoxLabelMode.Items.Add(v);
-            }
-            toolStripComboBoxLabelMode.SelectedItem = filterTag.Mode;
+                ActorFilter filterTag = (ActorFilter)listViewPresetEdit.SelectedItems[0].Tag;
+                contextMenuStripFilters.Tag = filterTag;
 
-            toolStripComboBoxMatchType.Items.Clear();
-            foreach (MemoryLayout.ActorType v in Enum.GetValues(typeof(MemoryLayout.ActorType)))
-            {
-                toolStripComboBoxMatchType.Items.Add(v);
+                toolStripMenuItemOverrideName.Checked = filterTag.HasDescriptionOverride;
+                toolStripMenuItemMatchType.Checked = filterTag.UseMatchType;
+                toolStripMenuItemMatchId.Checked = filterTag.UseMatchNpcId;
+                toolStripTextBoxNameOverrride.Text = string.IsNullOrEmpty(filterTag.Description) ? "??" : filterTag.Description;
+                toolStripTextBoxMatchId.Text = filterTag.MatchNpcId.ToString();
+
+                toolStripComboBoxLabelMode.Items.Clear();
+                foreach (GameData.OverlaySettings.DisplayMode v in Enum.GetValues(typeof(GameData.OverlaySettings.DisplayMode)))
+                {
+                    toolStripComboBoxLabelMode.Items.Add(v);
+                }
+                toolStripComboBoxLabelMode.SelectedItem = filterTag.Mode;
+
+                toolStripComboBoxMatchType.Items.Clear();
+                foreach (MemoryLayout.ActorType v in Enum.GetValues(typeof(MemoryLayout.ActorType)))
+                {
+                    toolStripComboBoxMatchType.Items.Add(v);
+                }
+                toolStripComboBoxMatchType.SelectedItem = filterTag.MatchType;
             }
-            toolStripComboBoxMatchType.SelectedItem = filterTag.MatchType;
         }
 
         private void contextMenuStripFilters_Closing(object sender, ToolStripDropDownClosingEventArgs e)
         {
-            e.Cancel = (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked);
-            if (!e.Cancel)
+            ActorFilter filterTag = (ActorFilter)contextMenuStripFilters.Tag;
+            if (filterTag != null)
             {
-                ActorFilter filterTag = (ActorFilter)contextMenuStripFilters.Tag;
-
-                filterTag.HasDescriptionOverride = toolStripMenuItemOverrideName.Checked;
-                filterTag.UseMatchType = toolStripMenuItemMatchType.Checked;
-                filterTag.UseMatchNpcId = toolStripMenuItemMatchId.Checked;
-                filterTag.Description = toolStripTextBoxNameOverrride.Text;
-                uint.TryParse(toolStripTextBoxMatchId.Text, out filterTag.MatchNpcId);
-                filterTag.Mode = (GameData.OverlaySettings.DisplayMode)toolStripComboBoxLabelMode.SelectedItem;
-                filterTag.MatchType = (MemoryLayout.ActorType)toolStripComboBoxMatchType.SelectedItem;
-
-                foreach (ListViewItem lvi in listViewPresetEdit.Items)
+                e.Cancel = (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked);
+                if (!e.Cancel)
                 {
-                    if (lvi.Tag == filterTag)
+                    filterTag.HasDescriptionOverride = toolStripMenuItemOverrideName.Checked;
+                    filterTag.UseMatchType = toolStripMenuItemMatchType.Checked;
+                    filterTag.UseMatchNpcId = toolStripMenuItemMatchId.Checked;
+                    filterTag.Description = toolStripTextBoxNameOverrride.Text;
+                    uint.TryParse(toolStripTextBoxMatchId.Text, out filterTag.MatchNpcId);
+                    filterTag.Mode = (GameData.OverlaySettings.DisplayMode)toolStripComboBoxLabelMode.SelectedItem;
+                    filterTag.MatchType = (MemoryLayout.ActorType)toolStripComboBoxMatchType.SelectedItem;
+
+                    foreach (ListViewItem lvi in listViewPresetEdit.Items)
                     {
-                        UpdateFilterItem(lvi);
-                        UpdateOverlaySettings();
-                        break;
+                        if (lvi.Tag == filterTag)
+                        {
+                            UpdateFilterItem(lvi);
+                            UpdateOverlaySettings();
+                            break;
+                        }
                     }
                 }
             }
@@ -668,6 +826,21 @@ namespace FFRadarBuddy
                 filterTag.Pen = new Pen(colorDialog1.Color);
             }
 
+            contextMenuStripFilters.Close();
+        }
+
+        private void toolStripMenuItemAddFilter_Click(object sender, EventArgs e)
+        {
+            ActorFilter filterOb = new ActorFilter();
+            filterOb.Description = "??";
+            filterOb.Pen = Pens.Gray;
+            filterOb.Mode = GameData.OverlaySettings.DisplayMode.WhenClose;
+            filterOb.MatchType = MemoryLayout.ActorType.Player;
+            filterOb.MatchNpcId = 0;
+            filterOb.UseMatchType = true;
+            filterOb.UseMatchNpcId = false;
+
+            CreateFilterItem(filterOb);
             contextMenuStripFilters.Close();
         }
 

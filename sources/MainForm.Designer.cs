@@ -36,9 +36,32 @@
             this.buttonPresetOptions = new System.Windows.Forms.Button();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.listViewPresetManage = new System.Windows.Forms.ListView();
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.contextMenuStripManagePresets = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemPresetExport = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemPresetDelete = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.buttonImportPreset = new System.Windows.Forms.Button();
             this.buttonAddPreset = new System.Windows.Forms.Button();
+            this.checkBoxShowOnlyMatching = new System.Windows.Forms.CheckBox();
+            this.listViewPresetEdit = new System.Windows.Forms.ListView();
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.contextMenuStripFilters = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemOverrideName = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripTextBoxNameOverrride = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemMatchType = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripComboBoxMatchType = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemMatchId = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripTextBoxMatchId = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemSelectColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripComboBoxLabelMode = new System.Windows.Forms.ToolStripComboBox();
             this.comboBoxPreset = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.checkBoxPauseScan = new System.Windows.Forms.CheckBox();
@@ -50,30 +73,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.timerScan = new System.Windows.Forms.Timer(this.components);
             this.labelUpdateNotify = new System.Windows.Forms.Label();
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.contextMenuStripManagePresets = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItemPresetExport = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemPresetDelete = new System.Windows.Forms.ToolStripMenuItem();
-            this.listViewPresetEdit = new System.Windows.Forms.ListView();
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.checkBoxShowOnlyMatching = new System.Windows.Forms.CheckBox();
-            this.contextMenuStripFilters = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItemMatchType = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripTextBoxNameOverrride = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripComboBoxMatchType = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripMenuItemMatchId = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripTextBoxMatchId = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripMenuItemSelectColor = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripComboBoxLabelMode = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripMenuItemOverrideName = new System.Windows.Forms.ToolStripMenuItem();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.toolStripPresetListTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.labelFilterHint = new System.Windows.Forms.Label();
+            this.toolStripMenuItemAddFilter = new System.Windows.Forms.ToolStripMenuItem();
             this.panelScanState.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -160,10 +163,10 @@
             this.splitContainer2.Panel1.Controls.Add(this.label3);
             this.splitContainer2.Panel1.Controls.Add(this.buttonImportPreset);
             this.splitContainer2.Panel1.Controls.Add(this.buttonAddPreset);
-            this.splitContainer2.Panel1Collapsed = true;
             // 
             // splitContainer2.Panel2
             // 
+            this.splitContainer2.Panel2.Controls.Add(this.labelFilterHint);
             this.splitContainer2.Panel2.Controls.Add(this.checkBoxShowOnlyMatching);
             this.splitContainer2.Panel2.Controls.Add(this.listViewPresetEdit);
             this.splitContainer2.Size = new System.Drawing.Size(342, 401);
@@ -179,6 +182,7 @@
             this.columnHeader4});
             this.listViewPresetManage.ContextMenuStrip = this.contextMenuStripManagePresets;
             this.listViewPresetManage.FullRowSelect = true;
+            this.listViewPresetManage.LabelEdit = true;
             this.listViewPresetManage.Location = new System.Drawing.Point(0, 0);
             this.listViewPresetManage.Margin = new System.Windows.Forms.Padding(0);
             this.listViewPresetManage.MultiSelect = false;
@@ -187,13 +191,44 @@
             this.listViewPresetManage.TabIndex = 3;
             this.listViewPresetManage.UseCompatibleStateImageBehavior = false;
             this.listViewPresetManage.View = System.Windows.Forms.View.Details;
+            this.listViewPresetManage.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listViewPresetManage_AfterLabelEdit);
+            this.listViewPresetManage.SelectedIndexChanged += new System.EventHandler(this.listViewPresetManage_SelectedIndexChanged);
             this.listViewPresetManage.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listViewPresetManage_KeyDown);
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "Name";
+            this.columnHeader4.Width = 338;
+            // 
+            // contextMenuStripManagePresets
+            // 
+            this.contextMenuStripManagePresets.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripPresetListTextBox,
+            this.toolStripMenuItemPresetExport,
+            this.toolStripMenuItemPresetDelete});
+            this.contextMenuStripManagePresets.Name = "contextMenuStripManagePresets";
+            this.contextMenuStripManagePresets.Size = new System.Drawing.Size(175, 73);
+            this.contextMenuStripManagePresets.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripManagePresets_Opening);
+            // 
+            // toolStripMenuItemPresetExport
+            // 
+            this.toolStripMenuItemPresetExport.Name = "toolStripMenuItemPresetExport";
+            this.toolStripMenuItemPresetExport.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItemPresetExport.Text = "Export to clipboard";
+            this.toolStripMenuItemPresetExport.Click += new System.EventHandler(this.toolStripMenuItemPresetExport_Click);
+            // 
+            // toolStripMenuItemPresetDelete
+            // 
+            this.toolStripMenuItemPresetDelete.Name = "toolStripMenuItemPresetDelete";
+            this.toolStripMenuItemPresetDelete.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItemPresetDelete.Text = "Delete";
+            this.toolStripMenuItemPresetDelete.Click += new System.EventHandler(this.toolStripMenuItemPresetDelete_Click);
             // 
             // label3
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(172, 162);
+            this.label3.Location = new System.Drawing.Point(364, 162);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(167, 13);
             this.label3.TabIndex = 2;
@@ -220,6 +255,159 @@
             this.buttonAddPreset.Text = "Add new";
             this.buttonAddPreset.UseVisualStyleBackColor = true;
             this.buttonAddPreset.Click += new System.EventHandler(this.buttonAddPreset_Click);
+            // 
+            // checkBoxShowOnlyMatching
+            // 
+            this.checkBoxShowOnlyMatching.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.checkBoxShowOnlyMatching.AutoSize = true;
+            this.checkBoxShowOnlyMatching.Location = new System.Drawing.Point(7, 191);
+            this.checkBoxShowOnlyMatching.Name = "checkBoxShowOnlyMatching";
+            this.checkBoxShowOnlyMatching.Size = new System.Drawing.Size(121, 17);
+            this.checkBoxShowOnlyMatching.TabIndex = 1;
+            this.checkBoxShowOnlyMatching.Text = "Show only matching";
+            this.checkBoxShowOnlyMatching.UseVisualStyleBackColor = true;
+            this.checkBoxShowOnlyMatching.CheckedChanged += new System.EventHandler(this.checkBoxShowOnlyMatching_CheckedChanged);
+            // 
+            // listViewPresetEdit
+            // 
+            this.listViewPresetEdit.AllowDrop = true;
+            this.listViewPresetEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listViewPresetEdit.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader5,
+            this.columnHeader6,
+            this.columnHeader7,
+            this.columnHeader8,
+            this.columnHeader9});
+            this.listViewPresetEdit.ContextMenuStrip = this.contextMenuStripFilters;
+            this.listViewPresetEdit.FullRowSelect = true;
+            this.listViewPresetEdit.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewPresetEdit.Location = new System.Drawing.Point(0, 0);
+            this.listViewPresetEdit.MultiSelect = false;
+            this.listViewPresetEdit.Name = "listViewPresetEdit";
+            this.listViewPresetEdit.OwnerDraw = true;
+            this.listViewPresetEdit.Size = new System.Drawing.Size(342, 185);
+            this.listViewPresetEdit.TabIndex = 0;
+            this.listViewPresetEdit.UseCompatibleStateImageBehavior = false;
+            this.listViewPresetEdit.View = System.Windows.Forms.View.Details;
+            this.listViewPresetEdit.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.listViewPresetEdit_DrawColumnHeader);
+            this.listViewPresetEdit.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.listViewPresetEdit_DrawItem);
+            this.listViewPresetEdit.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewPresetEdit_DrawSubItem);
+            this.listViewPresetEdit.DragDrop += new System.Windows.Forms.DragEventHandler(this.listViewPresetEdit_DragDrop);
+            this.listViewPresetEdit.DragEnter += new System.Windows.Forms.DragEventHandler(this.listViewPresetEdit_DragEnter);
+            this.listViewPresetEdit.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listViewPresetEdit_KeyDown);
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Description";
+            this.columnHeader5.Width = 102;
+            // 
+            // columnHeader6
+            // 
+            this.columnHeader6.Text = "Type";
+            this.columnHeader6.Width = 68;
+            // 
+            // columnHeader7
+            // 
+            this.columnHeader7.Text = "ID";
+            this.columnHeader7.Width = 29;
+            // 
+            // columnHeader8
+            // 
+            this.columnHeader8.Text = "Color";
+            this.columnHeader8.Width = 37;
+            // 
+            // columnHeader9
+            // 
+            this.columnHeader9.Text = "Style";
+            this.columnHeader9.Width = 100;
+            // 
+            // contextMenuStripFilters
+            // 
+            this.contextMenuStripFilters.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemOverrideName,
+            this.toolStripTextBoxNameOverrride,
+            this.toolStripSeparator2,
+            this.toolStripMenuItemMatchType,
+            this.toolStripComboBoxMatchType,
+            this.toolStripSeparator1,
+            this.toolStripMenuItemMatchId,
+            this.toolStripTextBoxMatchId,
+            this.toolStripSeparator3,
+            this.toolStripMenuItemSelectColor,
+            this.toolStripComboBoxLabelMode,
+            this.toolStripMenuItemAddFilter});
+            this.contextMenuStripFilters.Name = "contextMenuStripFilters";
+            this.contextMenuStripFilters.Size = new System.Drawing.Size(264, 258);
+            this.contextMenuStripFilters.Closing += new System.Windows.Forms.ToolStripDropDownClosingEventHandler(this.contextMenuStripFilters_Closing);
+            this.contextMenuStripFilters.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripFilters_Opening);
+            this.contextMenuStripFilters.Opened += new System.EventHandler(this.contextMenuStripFilters_Opened);
+            // 
+            // toolStripMenuItemOverrideName
+            // 
+            this.toolStripMenuItemOverrideName.CheckOnClick = true;
+            this.toolStripMenuItemOverrideName.Name = "toolStripMenuItemOverrideName";
+            this.toolStripMenuItemOverrideName.Size = new System.Drawing.Size(263, 22);
+            this.toolStripMenuItemOverrideName.Text = "Use name override (click to change)";
+            // 
+            // toolStripTextBoxNameOverrride
+            // 
+            this.toolStripTextBoxNameOverrride.Name = "toolStripTextBoxNameOverrride";
+            this.toolStripTextBoxNameOverrride.Size = new System.Drawing.Size(100, 23);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(260, 6);
+            // 
+            // toolStripMenuItemMatchType
+            // 
+            this.toolStripMenuItemMatchType.CheckOnClick = true;
+            this.toolStripMenuItemMatchType.Name = "toolStripMenuItemMatchType";
+            this.toolStripMenuItemMatchType.Size = new System.Drawing.Size(263, 22);
+            this.toolStripMenuItemMatchType.Text = "Match type (click to change)";
+            // 
+            // toolStripComboBoxMatchType
+            // 
+            this.toolStripComboBoxMatchType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxMatchType.Name = "toolStripComboBoxMatchType";
+            this.toolStripComboBoxMatchType.Size = new System.Drawing.Size(121, 23);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(260, 6);
+            // 
+            // toolStripMenuItemMatchId
+            // 
+            this.toolStripMenuItemMatchId.CheckOnClick = true;
+            this.toolStripMenuItemMatchId.Name = "toolStripMenuItemMatchId";
+            this.toolStripMenuItemMatchId.Size = new System.Drawing.Size(263, 22);
+            this.toolStripMenuItemMatchId.Text = "Match ID (click to change)";
+            // 
+            // toolStripTextBoxMatchId
+            // 
+            this.toolStripTextBoxMatchId.Name = "toolStripTextBoxMatchId";
+            this.toolStripTextBoxMatchId.Size = new System.Drawing.Size(100, 23);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(260, 6);
+            // 
+            // toolStripMenuItemSelectColor
+            // 
+            this.toolStripMenuItemSelectColor.Name = "toolStripMenuItemSelectColor";
+            this.toolStripMenuItemSelectColor.Size = new System.Drawing.Size(263, 22);
+            this.toolStripMenuItemSelectColor.Text = "Select color...";
+            this.toolStripMenuItemSelectColor.Click += new System.EventHandler(this.toolStripMenuItemSelectColor_Click);
+            // 
+            // toolStripComboBoxLabelMode
+            // 
+            this.toolStripComboBoxLabelMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboBoxLabelMode.Name = "toolStripComboBoxLabelMode";
+            this.toolStripComboBoxLabelMode.Size = new System.Drawing.Size(121, 23);
             // 
             // comboBoxPreset
             // 
@@ -329,185 +517,30 @@
             this.labelUpdateNotify.Visible = false;
             this.labelUpdateNotify.Click += new System.EventHandler(this.labelUpdateNotify_Click);
             // 
-            // columnHeader4
+            // toolStripPresetListTextBox
             // 
-            this.columnHeader4.Text = "Name";
-            this.columnHeader4.Width = 338;
+            this.toolStripPresetListTextBox.Name = "toolStripPresetListTextBox";
+            this.toolStripPresetListTextBox.Size = new System.Drawing.Size(100, 23);
+            this.toolStripPresetListTextBox.TextChanged += new System.EventHandler(this.toolStripPresetListTextBox_TextChanged);
             // 
-            // contextMenuStripManagePresets
+            // labelFilterHint
             // 
-            this.contextMenuStripManagePresets.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItemPresetExport,
-            this.toolStripMenuItemPresetDelete});
-            this.contextMenuStripManagePresets.Name = "contextMenuStripManagePresets";
-            this.contextMenuStripManagePresets.Size = new System.Drawing.Size(175, 48);
-            this.contextMenuStripManagePresets.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripManagePresets_Opening);
-            // 
-            // toolStripMenuItemPresetExport
-            // 
-            this.toolStripMenuItemPresetExport.Name = "toolStripMenuItemPresetExport";
-            this.toolStripMenuItemPresetExport.Size = new System.Drawing.Size(174, 22);
-            this.toolStripMenuItemPresetExport.Text = "Export to clipboard";
-            this.toolStripMenuItemPresetExport.Click += new System.EventHandler(this.toolStripMenuItemPresetExport_Click);
-            // 
-            // toolStripMenuItemPresetDelete
-            // 
-            this.toolStripMenuItemPresetDelete.Name = "toolStripMenuItemPresetDelete";
-            this.toolStripMenuItemPresetDelete.Size = new System.Drawing.Size(174, 22);
-            this.toolStripMenuItemPresetDelete.Text = "Delete";
-            this.toolStripMenuItemPresetDelete.Click += new System.EventHandler(this.toolStripMenuItemPresetDelete_Click);
-            // 
-            // listViewPresetEdit
-            // 
-            this.listViewPresetEdit.AllowDrop = true;
-            this.listViewPresetEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.labelFilterHint.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listViewPresetEdit.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader5,
-            this.columnHeader6,
-            this.columnHeader7,
-            this.columnHeader8,
-            this.columnHeader9});
-            this.listViewPresetEdit.ContextMenuStrip = this.contextMenuStripFilters;
-            this.listViewPresetEdit.FullRowSelect = true;
-            this.listViewPresetEdit.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.listViewPresetEdit.Location = new System.Drawing.Point(0, 0);
-            this.listViewPresetEdit.MultiSelect = false;
-            this.listViewPresetEdit.Name = "listViewPresetEdit";
-            this.listViewPresetEdit.OwnerDraw = true;
-            this.listViewPresetEdit.Size = new System.Drawing.Size(342, 372);
-            this.listViewPresetEdit.TabIndex = 0;
-            this.listViewPresetEdit.UseCompatibleStateImageBehavior = false;
-            this.listViewPresetEdit.View = System.Windows.Forms.View.Details;
-            this.listViewPresetEdit.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.listViewPresetEdit_DrawColumnHeader);
-            this.listViewPresetEdit.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.listViewPresetEdit_DrawItem);
-            this.listViewPresetEdit.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listViewPresetEdit_DrawSubItem);
-            this.listViewPresetEdit.DragDrop += new System.Windows.Forms.DragEventHandler(this.listViewPresetEdit_DragDrop);
-            this.listViewPresetEdit.DragEnter += new System.Windows.Forms.DragEventHandler(this.listViewPresetEdit_DragEnter);
-            this.listViewPresetEdit.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listViewPresetEdit_KeyDown);
+            this.labelFilterHint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.labelFilterHint.Location = new System.Drawing.Point(1, 162);
+            this.labelFilterHint.Name = "labelFilterHint";
+            this.labelFilterHint.Size = new System.Drawing.Size(340, 21);
+            this.labelFilterHint.TabIndex = 2;
+            this.labelFilterHint.Text = "Filter list empty, right click or drag && drop from actor list >>";
+            this.labelFilterHint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // columnHeader5
+            // toolStripMenuItemAddFilter
             // 
-            this.columnHeader5.Text = "Description";
-            this.columnHeader5.Width = 102;
-            // 
-            // columnHeader6
-            // 
-            this.columnHeader6.Text = "Type";
-            this.columnHeader6.Width = 68;
-            // 
-            // columnHeader7
-            // 
-            this.columnHeader7.Text = "ID";
-            this.columnHeader7.Width = 29;
-            // 
-            // columnHeader8
-            // 
-            this.columnHeader8.Text = "Color";
-            this.columnHeader8.Width = 37;
-            // 
-            // columnHeader9
-            // 
-            this.columnHeader9.Text = "Style";
-            this.columnHeader9.Width = 100;
-            // 
-            // checkBoxShowOnlyMatching
-            // 
-            this.checkBoxShowOnlyMatching.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.checkBoxShowOnlyMatching.AutoSize = true;
-            this.checkBoxShowOnlyMatching.Location = new System.Drawing.Point(7, 378);
-            this.checkBoxShowOnlyMatching.Name = "checkBoxShowOnlyMatching";
-            this.checkBoxShowOnlyMatching.Size = new System.Drawing.Size(121, 17);
-            this.checkBoxShowOnlyMatching.TabIndex = 1;
-            this.checkBoxShowOnlyMatching.Text = "Show only matching";
-            this.checkBoxShowOnlyMatching.UseVisualStyleBackColor = true;
-            this.checkBoxShowOnlyMatching.CheckedChanged += new System.EventHandler(this.checkBoxShowOnlyMatching_CheckedChanged);
-            // 
-            // contextMenuStripFilters
-            // 
-            this.contextMenuStripFilters.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItemOverrideName,
-            this.toolStripTextBoxNameOverrride,
-            this.toolStripSeparator2,
-            this.toolStripMenuItemMatchType,
-            this.toolStripComboBoxMatchType,
-            this.toolStripSeparator1,
-            this.toolStripMenuItemMatchId,
-            this.toolStripTextBoxMatchId,
-            this.toolStripSeparator3,
-            this.toolStripMenuItemSelectColor,
-            this.toolStripComboBoxLabelMode});
-            this.contextMenuStripFilters.Name = "contextMenuStripFilters";
-            this.contextMenuStripFilters.Size = new System.Drawing.Size(264, 214);
-            this.contextMenuStripFilters.Closing += new System.Windows.Forms.ToolStripDropDownClosingEventHandler(this.contextMenuStripFilters_Closing);
-            this.contextMenuStripFilters.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripFilters_Opening);
-            this.contextMenuStripFilters.Opened += new System.EventHandler(this.contextMenuStripFilters_Opened);
-            // 
-            // toolStripMenuItemMatchType
-            // 
-            this.toolStripMenuItemMatchType.CheckOnClick = true;
-            this.toolStripMenuItemMatchType.Name = "toolStripMenuItemMatchType";
-            this.toolStripMenuItemMatchType.Size = new System.Drawing.Size(263, 22);
-            this.toolStripMenuItemMatchType.Text = "Match type (click to change)";
-            // 
-            // toolStripTextBoxNameOverrride
-            // 
-            this.toolStripTextBoxNameOverrride.Name = "toolStripTextBoxNameOverrride";
-            this.toolStripTextBoxNameOverrride.Size = new System.Drawing.Size(100, 23);
-            // 
-            // toolStripComboBoxMatchType
-            // 
-            this.toolStripComboBoxMatchType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxMatchType.Name = "toolStripComboBoxMatchType";
-            this.toolStripComboBoxMatchType.Size = new System.Drawing.Size(121, 23);
-            // 
-            // toolStripMenuItemMatchId
-            // 
-            this.toolStripMenuItemMatchId.CheckOnClick = true;
-            this.toolStripMenuItemMatchId.Name = "toolStripMenuItemMatchId";
-            this.toolStripMenuItemMatchId.Size = new System.Drawing.Size(263, 22);
-            this.toolStripMenuItemMatchId.Text = "Match ID (click to change)";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(260, 6);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(260, 6);
-            // 
-            // toolStripTextBoxMatchId
-            // 
-            this.toolStripTextBoxMatchId.Name = "toolStripTextBoxMatchId";
-            this.toolStripTextBoxMatchId.Size = new System.Drawing.Size(100, 23);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(260, 6);
-            // 
-            // toolStripMenuItemSelectColor
-            // 
-            this.toolStripMenuItemSelectColor.Name = "toolStripMenuItemSelectColor";
-            this.toolStripMenuItemSelectColor.Size = new System.Drawing.Size(263, 22);
-            this.toolStripMenuItemSelectColor.Text = "Select color...";
-            this.toolStripMenuItemSelectColor.Click += new System.EventHandler(this.toolStripMenuItemSelectColor_Click);
-            // 
-            // toolStripComboBoxLabelMode
-            // 
-            this.toolStripComboBoxLabelMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboBoxLabelMode.Name = "toolStripComboBoxLabelMode";
-            this.toolStripComboBoxLabelMode.Size = new System.Drawing.Size(121, 23);
-            // 
-            // toolStripMenuItemOverrideName
-            // 
-            this.toolStripMenuItemOverrideName.CheckOnClick = true;
-            this.toolStripMenuItemOverrideName.Name = "toolStripMenuItemOverrideName";
-            this.toolStripMenuItemOverrideName.Size = new System.Drawing.Size(263, 22);
-            this.toolStripMenuItemOverrideName.Text = "Use name override (click to change)";
+            this.toolStripMenuItemAddFilter.Name = "toolStripMenuItemAddFilter";
+            this.toolStripMenuItemAddFilter.Size = new System.Drawing.Size(263, 22);
+            this.toolStripMenuItemAddFilter.Text = "Add filter";
+            this.toolStripMenuItemAddFilter.Click += new System.EventHandler(this.toolStripMenuItemAddFilter_Click);
             // 
             // MainForm
             // 
@@ -535,6 +568,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.contextMenuStripManagePresets.ResumeLayout(false);
+            this.contextMenuStripManagePresets.PerformLayout();
             this.contextMenuStripFilters.ResumeLayout(false);
             this.contextMenuStripFilters.PerformLayout();
             this.ResumeLayout(false);
@@ -587,6 +621,9 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSelectColor;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxLabelMode;
         private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.ToolStripTextBox toolStripPresetListTextBox;
+        private System.Windows.Forms.Label labelFilterHint;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAddFilter;
     }
 }
 

@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="ActorFilter.cs" />
     <Compile Include="GithubUpdater.cs" />
+    <Compile Include="GithubUpdaterPresets.cs" />
     <Compile Include="JsonParser.cs" />
     <Compile Include="ListViewColumnSorter.cs" />
     <Compile Include="ListViewDoubleBuffered.cs">
