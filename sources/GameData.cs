@@ -26,6 +26,7 @@ namespace FFRadarBuddy
             }
 
             public bool IsHighlighted = false;
+            public bool IsMatchingFilters = false;
             public DisplayMode Mode = DisplayMode.WhenLookingAt;
             public Pen DrawPen = Pens.Black;
             public string Description;
@@ -35,6 +36,7 @@ namespace FFRadarBuddy
                 Mode = DisplayMode.WhenClose;
                 DrawPen = Pens.Gray;
                 Description = Name;
+                IsMatchingFilters = false;
             }
 
             public override string ToString()
@@ -172,6 +174,11 @@ namespace FFRadarBuddy
                                 entryActor.SetDataOnly(entryData);
                                 entryActor.LastScanPass = actorScanPass;
                                 entryActor.Distance = Vector3.Distance(entryActor.Position, camera.Position);
+
+/*                                if (entryActor.Type == MemoryLayout.ActorType.Interaction || entryActor.Type == MemoryLayout.ActorType.Gathering)
+                                {                                  
+                                    Logger.WriteLine("[" + actorScanPass + "] Name:" + entryActor.Name + ", Id:" + entryActor.ShowActorId + ", Flags: 0x" + entryActor.Flags.ToString("x2") + (entryActor.OverlaySettings.IsHighlighted ? " (SELECTED)" : ""));
+                                }*/
                             }
                         }
                     }

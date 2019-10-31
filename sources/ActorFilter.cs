@@ -45,6 +45,7 @@ namespace FFRadarBuddy
                 actor.OverlaySettings.Mode = Mode;
                 actor.OverlaySettings.DrawPen = Pen;
                 actor.OverlaySettings.Description = HasDescriptionOverride ? Description : actor.ShowName;
+                actor.OverlaySettings.IsMatchingFilters = true;
             }
 
             return hasMatch;
@@ -133,6 +134,7 @@ namespace FFRadarBuddy
                 actor.OverlaySettings.Description = actor.ShowName;
                 actor.OverlaySettings.Mode = ShowOnlyMatching ? GameData.OverlaySettings.DisplayMode.Never : GameData.OverlaySettings.DisplayMode.WhenClose;
                 actor.OverlaySettings.DrawPen = Pens.Gray;
+                actor.OverlaySettings.IsMatchingFilters = false;
             }
         }
 

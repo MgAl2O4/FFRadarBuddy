@@ -17,7 +17,7 @@ namespace FFRadarBuddy
 
         public class ActorConsts
         {
-            public const int Size = 200;
+            public const int Size = 9200;
 
             public const int Name = 48;             // string
             public const int ActorIdA = 116;        // uint32
@@ -25,6 +25,7 @@ namespace FFRadarBuddy
             public const int NpcId = 128;           // uint32
             public const int Type = 140;            // uint8
             public const int SubType = 141;         // uint8
+            public const int Flags = 148;           // uint8
             public const int Position = 160;        // 3x float
             public const int HitBoxRadius = 192;    // float
         }
@@ -70,9 +71,14 @@ namespace FFRadarBuddy
             public uint NpcId;
             public ActorType Type;
             public byte SubType;
+            public byte Flags;
             public Vector3 Position = new Vector3();
             public float Radius;
             public long UniqueId;
+            public bool IsHidden;
+#if DEBUG
+            public byte[] prevBytes;
+#endif // DEBUG
 
             public ActorData() { }
             public ActorData(byte[] bytes) { Set(bytes); }
@@ -92,6 +98,37 @@ namespace FFRadarBuddy
             {
                 Type = (ActorType)bytes[ActorConsts.Type];
                 SubType = bytes[ActorConsts.SubType];
+
+                // interaction: hidden/used: 2b, 2f, 28
+                // gathering:   hidden/used: 3c, bc
+                // interaction: available: bf
+                // gathering:   available: 3f, bf
+                // interaction: currently used: ff
+                // gathering:   currently used: 7f
+                Flags = bytes[ActorConsts.Flags];
+                IsHidden = ((Flags & 0xf0) == 0x20) || ((Flags & 0xf) == 0xc);
+#if DEBUG
+                if (Type == ActorType.Interaction || Type == ActorType.Gathering)
+                {
+                    if (prevBytes != null && prevBytes.Length == bytes.Length)
+                    {
+                        for (int Idx = 0; Idx < bytes.Length; Idx++)
+                        {
+                            if (prevBytes[Idx] != bytes[Idx])
+                            {
+                                Logger.WriteLine("Scan diff! [" + Idx + "] 0x" + prevBytes[Idx].ToString("x2") + " -> 0x" + bytes[Idx].ToString("x2"));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        prevBytes = new byte[bytes.Length];
+                    }
+
+                    Array.Copy(bytes, prevBytes, bytes.Length);
+                }
+#endif // DEBUG
+
                 Position.X = BitConverter.ToSingle(bytes, ActorConsts.Position);
                 Position.Y = BitConverter.ToSingle(bytes, ActorConsts.Position + 4);
                 Position.Z = BitConverter.ToSingle(bytes, ActorConsts.Position + 8);

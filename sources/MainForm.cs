@@ -33,6 +33,7 @@ namespace FFRadarBuddy
             UpdatePresetList();
             RunUpdateCheck();
 
+            checkFilterNearby.Checked = PlayerSettings.Get().FilterNearbyActors;
             splitContainer2.Panel1Collapsed = true;
             listViewActors.ListViewItemSorter = actorListSorter;
 
@@ -47,20 +48,34 @@ namespace FFRadarBuddy
 
         private void GameData_OnActorListChanged()
         {
-            if (checkBoxPauseScan.Checked)
+            if (!checkBoxPauseScan.Checked)
             {
-                return;
+                RefreshActorList();
             }
+        }
 
+        private void RefreshActorList()
+        { 
             listViewActors.SuspendLayout();
+            listViewActors.BeginUpdate();
 
             // remove missing
             for (int Idx = listViewActors.Items.Count - 1; Idx >= 0; Idx--)
             {
                 GameData.ActorItem tagActor = (GameData.ActorItem)listViewActors.Items[Idx].Tag;
-                if (!gameData.listActors.Contains(tagActor))
+                bool shouldRemove = !gameData.listActors.Contains(tagActor);
+                if (checkFilterNearby.Checked && !tagActor.OverlaySettings.IsMatchingFilters)
+                {
+                    shouldRemove = true;
+                }
+
+                if (shouldRemove)
                 {
                     listViewActors.Items.RemoveAt(Idx);
+                }
+                else
+                {
+                    listViewActors.Items[Idx].BackColor = tagActor.IsHidden ? Color.LightGray : SystemColors.Window;
                 }
             }
 
@@ -78,14 +93,6 @@ namespace FFRadarBuddy
                 {
                     if (!knownActors.Contains(actor))
                     {
-                        ListViewItem lvi = new ListViewItem(actor.ShowName);
-                        lvi.Tag = actor;
-                        lvi.SubItems.Add(actor.ShowType);
-                        lvi.SubItems.Add(actor.ShowId);
-                        lvi.SubItems.Add(actor.ShowDistance);
-
-                        listViewActors.Items.Add(lvi);
-
                         if (activePreset != null)
                         {
                             activePreset.Apply(actor);
@@ -94,12 +101,26 @@ namespace FFRadarBuddy
                         {
                             actor.OverlaySettings.SetDefault(actor.ShowName);
                         }
+
+                        bool canAdd = !checkFilterNearby.Checked || actor.OverlaySettings.IsMatchingFilters;
+                        if (canAdd)
+                        {
+                            ListViewItem lvi = new ListViewItem(actor.ShowName);
+                            lvi.Tag = actor;
+                            lvi.SubItems.Add(actor.ShowType);
+                            lvi.SubItems.Add(actor.ShowId);
+                            lvi.SubItems.Add(actor.ShowDistance);
+                            lvi.BackColor = actor.IsHidden ? Color.LightGray : SystemColors.Window;
+
+                            listViewActors.Items.Add(lvi);
+                        }
                     }
                 }
             }
 
             listViewActors.ResumeLayout();
             listViewActors.Sort();
+            listViewActors.EndUpdate();
         }
 
         private void UpdateShownDistance()
@@ -213,6 +234,28 @@ namespace FFRadarBuddy
             {
                 selectedActor = (GameData.ActorItem)listViewActors.SelectedItems[0].Tag;
                 selectedActor.OverlaySettings.IsHighlighted = true;
+
+                labelSelectedName.Text = selectedActor.Name;
+                labelSelectedPos.Text = selectedActor.ShowPos + ", dist: " + selectedActor.ShowDistance;
+                labelSelectedNpcID.Text = "0x" + selectedActor.NpcId.ToString("X");
+                labelSelectedIDActorA.Text = "0x" + selectedActor.ActorIdA.ToString("X");
+                labelSelectedIDActorB.Text = "0x" + selectedActor.ActorIdB.ToString("X");
+                labelSelectedFlags.Text = "0x" + selectedActor.Flags.ToString("X2");
+                labelSelectedType.Text = selectedActor.Type.ToString();
+                labelSelectedSubType.Text = selectedActor.SubType.ToString();
+                labelSelectedFlagsHidden.Text = selectedActor.IsHidden ? "(hidden)" : "";
+            }
+            else
+            {
+                labelSelectedName.Text = "";
+                labelSelectedPos.Text = "";
+                labelSelectedNpcID.Text = "";
+                labelSelectedIDActorA.Text = "";
+                labelSelectedIDActorB.Text = "";
+                labelSelectedFlags.Text = "";
+                labelSelectedType.Text = "";
+                labelSelectedSubType.Text = "";
+                labelSelectedFlagsHidden.Text = "";
             }
         }
 
@@ -223,6 +266,12 @@ namespace FFRadarBuddy
             {
                 GameData_OnActorListChanged();
             }
+        }
+
+        private void checkFilterNearby_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerSettings.Get().FilterNearbyActors = checkFilterNearby.Checked;
+            RefreshActorList();
         }
 
         private void RunUpdateCheck()
@@ -610,6 +659,11 @@ namespace FFRadarBuddy
 
             labelFilterHint.Visible = (activePreset != null) && (activePreset.Filters.Count == 0);
             UpdateOverlaySettings();
+
+            if (checkFilterNearby.Checked)
+            {
+                RefreshActorList();
+            }
         }
 
         private void listViewActors_MouseMove(object sender, MouseEventArgs e)
@@ -845,5 +899,6 @@ namespace FFRadarBuddy
         }
 
         #endregion
+
     }
 }

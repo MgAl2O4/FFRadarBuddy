@@ -131,6 +131,19 @@ namespace FFRadarBuddy
                         }
                     }
                 }
+
+                if (actor.IsHidden && !actor.OverlaySettings.IsHighlighted)
+                {
+                    canShow = false;
+                }
+            }
+            else
+            {
+                if (actor.OverlaySettings.IsHighlighted)
+                {
+                    canShow = true;
+                    projectedPt.Z = -projectedPt.Z;
+                }
             }
 
             return canShow;
@@ -194,6 +207,8 @@ namespace FFRadarBuddy
                 if (bCanShow)
                 {
                     Vector2 canvasPt = new Vector2(canvasHalfX + (projectedPt.X / projectedPt.Z * canvasHalfX), canvasHalfY - (projectedPt.Y / projectedPt.Z * canvasHalfY));
+                    canvasPt.X = Math.Min(Width, Math.Max(0, canvasPt.X));
+                    canvasPt.Y = Math.Min(Height, Math.Max(0, canvasPt.Y));
 
                     graphics.DrawEllipse(actor.OverlaySettings.DrawPen, canvasPt.X - markerRadius, canvasPt.Y - markerRadius, markerRadius * 2, markerRadius * 2);
                     if (actor.OverlaySettings.IsHighlighted)
@@ -327,9 +342,10 @@ namespace FFRadarBuddy
             {
                 const int WS_EX_LAYERED = 0x00080000;
                 const int WS_EX_TRANSPARENT = 0x00000020;
+                const int WS_EX_TOOLWINDOW = 0x00000080;
 
                 CreateParams windowParams = base.CreateParams;
-                windowParams.ExStyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT;
+                windowParams.ExStyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW;
                 return windowParams;
             }
         }

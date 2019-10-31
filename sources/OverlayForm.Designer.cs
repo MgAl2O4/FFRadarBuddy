@@ -49,7 +49,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "OverlayForm";
             this.ShowInTaskbar = false;
-            this.Text = "OverlayForm";
+            this.Text = "FFRadayBuddy overlay";
             this.TopMost = true;
             this.ResumeLayout(false);
 
