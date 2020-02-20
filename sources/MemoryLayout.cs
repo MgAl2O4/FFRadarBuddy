@@ -41,8 +41,8 @@ namespace FFRadarBuddy
             public const int Size = 0x1d0;
             public const int Position = 0x1b0;       // 3x float
             public const int Target = 0x1c0;         // 3x float
-            public const int Distance = 0x118;      // float
-            public const int Fov = 0x124;           // float
+            public const int Distance = 0x114;      // float
+            public const int Fov = 0x120;           // float
         }
 
         public enum ActorType : byte

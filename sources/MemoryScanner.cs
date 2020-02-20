@@ -23,8 +23,29 @@ namespace FFRadarBuddy
             public uint Type;
         }
 
+        [Flags]
+        public enum ProcessAccessFlags : uint
+        {
+            All = 0x001F0FFF,
+            Terminate = 0x00000001,
+            CreateThread = 0x00000002,
+            VirtualMemoryOperation = 0x00000008,
+            VirtualMemoryRead = 0x00000010,
+            VirtualMemoryWrite = 0x00000020,
+            DuplicateHandle = 0x00000040,
+            CreateProcess = 0x000000080,
+            SetQuota = 0x00000100,
+            SetInformation = 0x00000200,
+            QueryInformation = 0x00000400,
+            QueryLimitedInformation = 0x00001000,
+            Synchronize = 0x00100000
+        }
+
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         private static extern bool ReadProcessMemory(IntPtr processHandle, IntPtr lpBaseAddress, [In] [Out] byte[] lpBuffer, IntPtr regionSize, out IntPtr lpNumberOfBytesRead);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
 
         [DllImport("kernel32.dll")]
         private static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
@@ -37,19 +58,22 @@ namespace FFRadarBuddy
 
         private string cachedProcessName;
         private Process cachedProcess;
+        private IntPtr cachedProcessHandle;
         private long cachedProcessBase;
         private List<MemoryRegionInfo> memoryRegions = new List<MemoryRegionInfo>();
 
         public void OpenProcess(string procName)
         {
             cachedProcessName = procName;
+            cachedProcessHandle = IntPtr.Zero;
+            memoryRegions.Clear();
 
             Process[] match = Process.GetProcessesByName(procName);
             cachedProcess = (match.Length > 0) ? match[0] : null;
 
-            memoryRegions.Clear();
-            if (cachedProcess != null && cachedProcess.Handle != IntPtr.Zero)
+            if (cachedProcess != null)
             {
+                cachedProcessHandle = OpenProcess(ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VirtualMemoryRead, false, match[0].Id);
                 UpdateMemoryRegions();
             }
         }
@@ -64,14 +88,19 @@ namespace FFRadarBuddy
             return cachedProcess;
         }
 
+        public IntPtr GetProcessHandle()
+        {
+            return cachedProcessHandle;
+        }
+
         public bool IsValid()
         {
-            if (cachedProcess == null)
+            if (cachedProcess == null || cachedProcessHandle == IntPtr.Zero)
             {
                 return false;
             }
 
-            if (cachedProcess.HasExited || cachedProcess.Handle == IntPtr.Zero)
+            if (cachedProcess.HasExited)
             {
                 cachedProcess = null;
                 return false;
@@ -90,7 +119,7 @@ namespace FFRadarBuddy
             };
 
             memoryRegions.Add(baseModuleInfo);
-            //Console.WriteLine("base:0x" + baseModuleInfo.BaseAddress.ToString("x") + " [" + cachedProcess.MainModule.ModuleName + "], size:0x" + baseModuleInfo.Size.ToString("x"));
+            Console.WriteLine("base:0x" + baseModuleInfo.BaseAddress.ToString("x") + " [" + cachedProcess.MainModule.ModuleName + "], size:0x" + baseModuleInfo.Size.ToString("x"));
 
             bool bScanMemoryPages = false;
             if (bScanMemoryPages)
@@ -108,7 +137,7 @@ namespace FFRadarBuddy
                 for (long scanAddress = 0; scanAddress < Int64.MaxValue;)
                 {
                     MEMORY_BASIC_INFORMATION regionInfo;
-                    int result = VirtualQueryEx(cachedProcess.Handle, (IntPtr)scanAddress, out regionInfo, (uint)regionInfoSize);
+                    int result = VirtualQueryEx(cachedProcessHandle, (IntPtr)scanAddress, out regionInfo, (uint)regionInfoSize);
                     if (result != regionInfoSize)
                     {
                         break;
@@ -140,7 +169,7 @@ namespace FFRadarBuddy
         {
             byte[] memBuffer = new byte[(long)regionInfo.Size];
             IntPtr bytesRead = IntPtr.Zero;
-            ReadProcessMemory(cachedProcess.Handle, regionInfo.BaseAddress, memBuffer, regionInfo.Size, out bytesRead);
+            ReadProcessMemory(cachedProcessHandle, regionInfo.BaseAddress, memBuffer, regionInfo.Size, out bytesRead);
 
             return memBuffer;
         }
@@ -149,7 +178,7 @@ namespace FFRadarBuddy
         {
             byte[] memBuffer = new byte[Size];
             IntPtr bytesRead = IntPtr.Zero;
-            ReadProcessMemory(cachedProcess.Handle, new IntPtr(Address), memBuffer, new IntPtr(Size), out bytesRead);
+            ReadProcessMemory(cachedProcessHandle, new IntPtr(Address), memBuffer, new IntPtr(Size), out bytesRead);
 
             return memBuffer;
         }
