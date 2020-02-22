@@ -55,7 +55,7 @@ namespace FFRadarBuddy
         }
 
         private void RefreshActorList()
-        { 
+        {
             listViewActors.SuspendLayout();
             listViewActors.BeginUpdate();
 
@@ -276,7 +276,8 @@ namespace FFRadarBuddy
 
         private void RunUpdateCheck()
         {
-            Task updateProgramTask = new Task(() => {
+            Task updateProgramTask = new Task(() =>
+            {
                 bool bFoundUpdate = GithubUpdater.FindAndDownloadUpdates(out string statusMsg);
 
                 Invoke((MethodInvoker)delegate
@@ -287,7 +288,8 @@ namespace FFRadarBuddy
                 });
             });
 
-            Task updatePresetsTask = new Task(() => {
+            Task updatePresetsTask = new Task(() =>
+            {
                 List<string> onlinePresets = GithubUpdaterPresets.FindAndDownloadPresets(out string statusMsg);
 
                 Invoke((MethodInvoker)delegate
@@ -477,7 +479,7 @@ namespace FFRadarBuddy
                     if (dr == DialogResult.Yes)
                     {
                         // merge
-                        existingPreset.Filters.AddRange(loadedPreset.Filters);                      
+                        existingPreset.Filters.AddRange(loadedPreset.Filters);
                     }
                     else if (dr == DialogResult.No)
                     {
@@ -701,7 +703,7 @@ namespace FFRadarBuddy
         }
 
         private void CreateFilterItem(ActorFilter filterOb)
-        { 
+        {
             if (activePreset != null)
             {
                 if (!filterOb.UseMatchNpcId)
@@ -900,5 +902,30 @@ namespace FFRadarBuddy
 
         #endregion
 
+        private void listViewActors_KeyDown(object sender, KeyEventArgs e)
+        {
+#if DEBUG
+            if (e.KeyCode == Keys.F11)
+            {
+                if (gameData.memoryScanner != null && gameData.memoryScanner.IsValid())
+                {
+                    gameData.memoryScanner.CacheMemoryRegions();
+                    gameData.memoryScanner.SaveMemoryRegions();
+                    Logger.WriteLine("Snapshot saved!");
+                }
+                else
+                {
+                    Logger.WriteLine("Failed to save memory snashot");
+                }
+            }
+
+            if (e.KeyCode == Keys.F12)
+            {
+                GameDataFinder addressFinder = new GameDataFinder();
+                addressFinder.memoryScanner = gameData.memoryScanner;
+                addressFinder.FindActorList();
+            }
+#endif
+        }
     }
 }

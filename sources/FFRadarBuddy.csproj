@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActorFilter.cs" />
+    <Compile Include="GameDataFinder.cs" />
     <Compile Include="GithubUpdater.cs" />
     <Compile Include="GithubUpdaterPresets.cs" />
     <Compile Include="JsonParser.cs" />

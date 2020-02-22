@@ -35,11 +35,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.buttonPresetOptions = new System.Windows.Forms.Button();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-#if DEBUG
             this.listViewPresetManage = new System.Windows.Forms.ListView();
-#else
-            this.listViewPresetManage = new ListViewDoubleBuffered();
-#endif
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStripManagePresets = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripPresetListTextBox = new System.Windows.Forms.ToolStripTextBox();
@@ -48,13 +44,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.buttonImportPreset = new System.Windows.Forms.Button();
             this.buttonAddPreset = new System.Windows.Forms.Button();
+            this.checkFilterNearby = new System.Windows.Forms.CheckBox();
             this.labelFilterHint = new System.Windows.Forms.Label();
             this.checkBoxShowOnlyMatching = new System.Windows.Forms.CheckBox();
-#if DEBUG
             this.listViewPresetEdit = new System.Windows.Forms.ListView();
-#else
-            this.listViewPresetEdit = new ListViewDoubleBuffered();
-#endif
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -75,12 +68,26 @@
             this.toolStripMenuItemAddFilter = new System.Windows.Forms.ToolStripMenuItem();
             this.comboBoxPreset = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.labelSelectedFlagsHidden = new System.Windows.Forms.Label();
+            this.labelSelectedPos = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.labelSelectedIDActorB = new System.Windows.Forms.Label();
+            this.labelSelectedName = new System.Windows.Forms.Label();
+            this.labelSelectedFlags = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.labelSelectedType = new System.Windows.Forms.Label();
+            this.labelSelectedIDActorA = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.labelSelectedSubType = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.labelSelectedNpcID = new System.Windows.Forms.Label();
             this.checkBoxPauseScan = new System.Windows.Forms.CheckBox();
-#if DEBUG
             this.listViewActors = new System.Windows.Forms.ListView();
-#else
-            this.listViewActors = new ListViewDoubleBuffered();
-#endif
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -89,25 +96,6 @@
             this.timerScan = new System.Windows.Forms.Timer(this.components);
             this.labelUpdateNotify = new System.Windows.Forms.Label();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.checkFilterNearby = new System.Windows.Forms.CheckBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.labelSelectedName = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.labelSelectedType = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.labelSelectedSubType = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.labelSelectedNpcID = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label13 = new System.Windows.Forms.Label();
-            this.labelSelectedIDActorA = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.labelSelectedFlags = new System.Windows.Forms.Label();
-            this.labelSelectedIDActorB = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.labelSelectedPos = new System.Windows.Forms.Label();
-            this.labelSelectedFlagsHidden = new System.Windows.Forms.Label();
             this.panelScanState.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -216,6 +204,7 @@
             this.columnHeader4});
             this.listViewPresetManage.ContextMenuStrip = this.contextMenuStripManagePresets;
             this.listViewPresetManage.FullRowSelect = true;
+            this.listViewPresetManage.HideSelection = false;
             this.listViewPresetManage.LabelEdit = true;
             this.listViewPresetManage.Location = new System.Drawing.Point(0, 0);
             this.listViewPresetManage.Margin = new System.Windows.Forms.Padding(0);
@@ -241,11 +230,12 @@
             this.toolStripMenuItemPresetExport,
             this.toolStripMenuItemPresetDelete});
             this.contextMenuStripManagePresets.Name = "contextMenuStripManagePresets";
-            this.contextMenuStripManagePresets.Size = new System.Drawing.Size(175, 73);
+            this.contextMenuStripManagePresets.Size = new System.Drawing.Size(176, 73);
             this.contextMenuStripManagePresets.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripManagePresets_Opening);
             // 
             // toolStripPresetListTextBox
             // 
+            this.toolStripPresetListTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStripPresetListTextBox.Name = "toolStripPresetListTextBox";
             this.toolStripPresetListTextBox.Size = new System.Drawing.Size(100, 23);
             this.toolStripPresetListTextBox.TextChanged += new System.EventHandler(this.toolStripPresetListTextBox_TextChanged);
@@ -253,14 +243,14 @@
             // toolStripMenuItemPresetExport
             // 
             this.toolStripMenuItemPresetExport.Name = "toolStripMenuItemPresetExport";
-            this.toolStripMenuItemPresetExport.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItemPresetExport.Size = new System.Drawing.Size(175, 22);
             this.toolStripMenuItemPresetExport.Text = "Export to clipboard";
             this.toolStripMenuItemPresetExport.Click += new System.EventHandler(this.toolStripMenuItemPresetExport_Click);
             // 
             // toolStripMenuItemPresetDelete
             // 
             this.toolStripMenuItemPresetDelete.Name = "toolStripMenuItemPresetDelete";
-            this.toolStripMenuItemPresetDelete.Size = new System.Drawing.Size(174, 22);
+            this.toolStripMenuItemPresetDelete.Size = new System.Drawing.Size(175, 22);
             this.toolStripMenuItemPresetDelete.Text = "Delete";
             this.toolStripMenuItemPresetDelete.Click += new System.EventHandler(this.toolStripMenuItemPresetDelete_Click);
             // 
@@ -295,6 +285,18 @@
             this.buttonAddPreset.Text = "Add new";
             this.buttonAddPreset.UseVisualStyleBackColor = true;
             this.buttonAddPreset.Click += new System.EventHandler(this.buttonAddPreset_Click);
+            // 
+            // checkFilterNearby
+            // 
+            this.checkFilterNearby.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkFilterNearby.AutoSize = true;
+            this.checkFilterNearby.Location = new System.Drawing.Point(214, 194);
+            this.checkFilterNearby.Name = "checkFilterNearby";
+            this.checkFilterNearby.Size = new System.Drawing.Size(127, 17);
+            this.checkFilterNearby.TabIndex = 3;
+            this.checkFilterNearby.Text = "Filter nearby actors ->";
+            this.checkFilterNearby.UseVisualStyleBackColor = true;
+            this.checkFilterNearby.CheckedChanged += new System.EventHandler(this.checkFilterNearby_CheckedChanged);
             // 
             // labelFilterHint
             // 
@@ -335,6 +337,7 @@
             this.listViewPresetEdit.ContextMenuStrip = this.contextMenuStripFilters;
             this.listViewPresetEdit.FullRowSelect = true;
             this.listViewPresetEdit.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listViewPresetEdit.HideSelection = false;
             this.listViewPresetEdit.Location = new System.Drawing.Point(0, 0);
             this.listViewPresetEdit.MultiSelect = false;
             this.listViewPresetEdit.Name = "listViewPresetEdit";
@@ -405,6 +408,7 @@
             // 
             // toolStripTextBoxNameOverrride
             // 
+            this.toolStripTextBoxNameOverrride.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStripTextBoxNameOverrride.Name = "toolStripTextBoxNameOverrride";
             this.toolStripTextBoxNameOverrride.Size = new System.Drawing.Size(100, 23);
             // 
@@ -440,6 +444,7 @@
             // 
             // toolStripTextBoxMatchId
             // 
+            this.toolStripTextBoxMatchId.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStripTextBoxMatchId.Name = "toolStripTextBoxMatchId";
             this.toolStripTextBoxMatchId.Size = new System.Drawing.Size(100, 23);
             // 
@@ -491,6 +496,187 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Preset:";
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.labelSelectedFlagsHidden);
+            this.groupBox1.Controls.Add(this.labelSelectedPos);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.labelSelectedIDActorB);
+            this.groupBox1.Controls.Add(this.labelSelectedName);
+            this.groupBox1.Controls.Add(this.labelSelectedFlags);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label15);
+            this.groupBox1.Controls.Add(this.labelSelectedType);
+            this.groupBox1.Controls.Add(this.labelSelectedIDActorA);
+            this.groupBox1.Controls.Add(this.label8);
+            this.groupBox1.Controls.Add(this.label13);
+            this.groupBox1.Controls.Add(this.labelSelectedSubType);
+            this.groupBox1.Controls.Add(this.label12);
+            this.groupBox1.Controls.Add(this.label10);
+            this.groupBox1.Controls.Add(this.labelSelectedNpcID);
+            this.groupBox1.Location = new System.Drawing.Point(1, 352);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(446, 77);
+            this.groupBox1.TabIndex = 17;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Selection details";
+            // 
+            // labelSelectedFlagsHidden
+            // 
+            this.labelSelectedFlagsHidden.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSelectedFlagsHidden.AutoSize = true;
+            this.labelSelectedFlagsHidden.Location = new System.Drawing.Point(283, 42);
+            this.labelSelectedFlagsHidden.Name = "labelSelectedFlagsHidden";
+            this.labelSelectedFlagsHidden.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedFlagsHidden.TabIndex = 19;
+            // 
+            // labelSelectedPos
+            // 
+            this.labelSelectedPos.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSelectedPos.AutoSize = true;
+            this.labelSelectedPos.Location = new System.Drawing.Point(257, 16);
+            this.labelSelectedPos.Name = "labelSelectedPos";
+            this.labelSelectedPos.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedPos.TabIndex = 18;
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(198, 16);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(47, 13);
+            this.label5.TabIndex = 17;
+            this.label5.Text = "Position:";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 16);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(38, 13);
+            this.label4.TabIndex = 3;
+            this.label4.Text = "Name:";
+            // 
+            // labelSelectedIDActorB
+            // 
+            this.labelSelectedIDActorB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSelectedIDActorB.AutoSize = true;
+            this.labelSelectedIDActorB.Location = new System.Drawing.Point(257, 55);
+            this.labelSelectedIDActorB.Name = "labelSelectedIDActorB";
+            this.labelSelectedIDActorB.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedIDActorB.TabIndex = 16;
+            // 
+            // labelSelectedName
+            // 
+            this.labelSelectedName.AutoSize = true;
+            this.labelSelectedName.Location = new System.Drawing.Point(56, 16);
+            this.labelSelectedName.Name = "labelSelectedName";
+            this.labelSelectedName.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedName.TabIndex = 4;
+            // 
+            // labelSelectedFlags
+            // 
+            this.labelSelectedFlags.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSelectedFlags.AutoSize = true;
+            this.labelSelectedFlags.Location = new System.Drawing.Point(257, 42);
+            this.labelSelectedFlags.Name = "labelSelectedFlags";
+            this.labelSelectedFlags.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedFlags.TabIndex = 15;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(6, 29);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(34, 13);
+            this.label6.TabIndex = 5;
+            this.label6.Text = "Type:";
+            // 
+            // label15
+            // 
+            this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(198, 55);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(31, 13);
+            this.label15.TabIndex = 14;
+            this.label15.Text = "ID B:";
+            // 
+            // labelSelectedType
+            // 
+            this.labelSelectedType.AutoSize = true;
+            this.labelSelectedType.Location = new System.Drawing.Point(56, 29);
+            this.labelSelectedType.Name = "labelSelectedType";
+            this.labelSelectedType.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedType.TabIndex = 6;
+            // 
+            // labelSelectedIDActorA
+            // 
+            this.labelSelectedIDActorA.AutoSize = true;
+            this.labelSelectedIDActorA.Location = new System.Drawing.Point(56, 55);
+            this.labelSelectedIDActorA.Name = "labelSelectedIDActorA";
+            this.labelSelectedIDActorA.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedIDActorA.TabIndex = 13;
+            // 
+            // label8
+            // 
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(198, 29);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(53, 13);
+            this.label8.TabIndex = 7;
+            this.label8.Text = "SubType:";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(6, 55);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(31, 13);
+            this.label13.TabIndex = 12;
+            this.label13.Text = "ID A:";
+            // 
+            // labelSelectedSubType
+            // 
+            this.labelSelectedSubType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSelectedSubType.AutoSize = true;
+            this.labelSelectedSubType.Location = new System.Drawing.Point(257, 29);
+            this.labelSelectedSubType.Name = "labelSelectedSubType";
+            this.labelSelectedSubType.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedSubType.TabIndex = 8;
+            // 
+            // label12
+            // 
+            this.label12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(198, 42);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(35, 13);
+            this.label12.TabIndex = 11;
+            this.label12.Text = "Flags:";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(6, 42);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(44, 13);
+            this.label10.TabIndex = 9;
+            this.label10.Text = "Npc ID:";
+            // 
+            // labelSelectedNpcID
+            // 
+            this.labelSelectedNpcID.AutoSize = true;
+            this.labelSelectedNpcID.Location = new System.Drawing.Point(56, 42);
+            this.labelSelectedNpcID.Name = "labelSelectedNpcID";
+            this.labelSelectedNpcID.Size = new System.Drawing.Size(0, 13);
+            this.labelSelectedNpcID.TabIndex = 10;
+            // 
             // checkBoxPauseScan
             // 
             this.checkBoxPauseScan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -514,6 +700,7 @@
             this.columnHeader3,
             this.columnHeaderDistance});
             this.listViewActors.FullRowSelect = true;
+            this.listViewActors.HideSelection = false;
             this.listViewActors.Location = new System.Drawing.Point(0, 28);
             this.listViewActors.Margin = new System.Windows.Forms.Padding(0);
             this.listViewActors.MultiSelect = false;
@@ -524,6 +711,7 @@
             this.listViewActors.View = System.Windows.Forms.View.Details;
             this.listViewActors.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewActors_ColumnClick);
             this.listViewActors.SelectedIndexChanged += new System.EventHandler(this.listViewActors_SelectedIndexChanged);
+            this.listViewActors.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listViewActors_KeyDown);
             this.listViewActors.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listViewActors_MouseMove);
             // 
             // columnHeader1
@@ -575,199 +763,6 @@
             this.labelUpdateNotify.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelUpdateNotify.Visible = false;
             this.labelUpdateNotify.Click += new System.EventHandler(this.labelUpdateNotify_Click);
-            // 
-            // checkFilterNearby
-            // 
-            this.checkFilterNearby.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkFilterNearby.AutoSize = true;
-            this.checkFilterNearby.Location = new System.Drawing.Point(214, 194);
-            this.checkFilterNearby.Name = "checkFilterNearby";
-            this.checkFilterNearby.Size = new System.Drawing.Size(127, 17);
-            this.checkFilterNearby.TabIndex = 3;
-            this.checkFilterNearby.Text = "Filter nearby actors ->";
-            this.checkFilterNearby.UseVisualStyleBackColor = true;
-            this.checkFilterNearby.CheckedChanged += new System.EventHandler(this.checkFilterNearby_CheckedChanged);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 16);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(38, 13);
-            this.label4.TabIndex = 3;
-            this.label4.Text = "Name:";
-            // 
-            // labelSelectedName
-            // 
-            this.labelSelectedName.AutoSize = true;
-            this.labelSelectedName.Location = new System.Drawing.Point(56, 16);
-            this.labelSelectedName.Name = "labelSelectedName";
-            this.labelSelectedName.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedName.TabIndex = 4;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 29);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(34, 13);
-            this.label6.TabIndex = 5;
-            this.label6.Text = "Type:";
-            // 
-            // labelSelectedType
-            // 
-            this.labelSelectedType.AutoSize = true;
-            this.labelSelectedType.Location = new System.Drawing.Point(56, 29);
-            this.labelSelectedType.Name = "labelSelectedType";
-            this.labelSelectedType.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedType.TabIndex = 6;
-            // 
-            // label8
-            // 
-            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(198, 29);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(53, 13);
-            this.label8.TabIndex = 7;
-            this.label8.Text = "SubType:";
-            // 
-            // labelSelectedSubType
-            // 
-            this.labelSelectedSubType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelSelectedSubType.AutoSize = true;
-            this.labelSelectedSubType.Location = new System.Drawing.Point(257, 29);
-            this.labelSelectedSubType.Name = "labelSelectedSubType";
-            this.labelSelectedSubType.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedSubType.TabIndex = 8;
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 42);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(44, 13);
-            this.label10.TabIndex = 9;
-            this.label10.Text = "Npc ID:";
-            // 
-            // labelSelectedNpcID
-            // 
-            this.labelSelectedNpcID.AutoSize = true;
-            this.labelSelectedNpcID.Location = new System.Drawing.Point(56, 42);
-            this.labelSelectedNpcID.Name = "labelSelectedNpcID";
-            this.labelSelectedNpcID.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedNpcID.TabIndex = 10;
-            // 
-            // label12
-            // 
-            this.label12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(198, 42);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(35, 13);
-            this.label12.TabIndex = 11;
-            this.label12.Text = "Flags:";
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(6, 55);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(31, 13);
-            this.label13.TabIndex = 12;
-            this.label13.Text = "ID A:";
-            // 
-            // labelSelectedIDActorA
-            // 
-            this.labelSelectedIDActorA.AutoSize = true;
-            this.labelSelectedIDActorA.Location = new System.Drawing.Point(56, 55);
-            this.labelSelectedIDActorA.Name = "labelSelectedIDActorA";
-            this.labelSelectedIDActorA.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedIDActorA.TabIndex = 13;
-            // 
-            // label15
-            // 
-            this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(198, 55);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(31, 13);
-            this.label15.TabIndex = 14;
-            this.label15.Text = "ID B:";
-            // 
-            // labelSelectedFlags
-            // 
-            this.labelSelectedFlags.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelSelectedFlags.AutoSize = true;
-            this.labelSelectedFlags.Location = new System.Drawing.Point(257, 42);
-            this.labelSelectedFlags.Name = "labelSelectedFlags";
-            this.labelSelectedFlags.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedFlags.TabIndex = 15;
-            // 
-            // labelSelectedIDActorB
-            // 
-            this.labelSelectedIDActorB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelSelectedIDActorB.AutoSize = true;
-            this.labelSelectedIDActorB.Location = new System.Drawing.Point(257, 55);
-            this.labelSelectedIDActorB.Name = "labelSelectedIDActorB";
-            this.labelSelectedIDActorB.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedIDActorB.TabIndex = 16;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.labelSelectedFlagsHidden);
-            this.groupBox1.Controls.Add(this.labelSelectedPos);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.labelSelectedIDActorB);
-            this.groupBox1.Controls.Add(this.labelSelectedName);
-            this.groupBox1.Controls.Add(this.labelSelectedFlags);
-            this.groupBox1.Controls.Add(this.label6);
-            this.groupBox1.Controls.Add(this.label15);
-            this.groupBox1.Controls.Add(this.labelSelectedType);
-            this.groupBox1.Controls.Add(this.labelSelectedIDActorA);
-            this.groupBox1.Controls.Add(this.label8);
-            this.groupBox1.Controls.Add(this.label13);
-            this.groupBox1.Controls.Add(this.labelSelectedSubType);
-            this.groupBox1.Controls.Add(this.label12);
-            this.groupBox1.Controls.Add(this.label10);
-            this.groupBox1.Controls.Add(this.labelSelectedNpcID);
-            this.groupBox1.Location = new System.Drawing.Point(1, 352);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(446, 77);
-            this.groupBox1.TabIndex = 17;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Selection details";
-            // 
-            // label5
-            // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(198, 16);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(47, 13);
-            this.label5.TabIndex = 17;
-            this.label5.Text = "Position:";
-            // 
-            // labelSelectedPos
-            // 
-            this.labelSelectedPos.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelSelectedPos.AutoSize = true;
-            this.labelSelectedPos.Location = new System.Drawing.Point(257, 16);
-            this.labelSelectedPos.Name = "labelSelectedPos";
-            this.labelSelectedPos.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedPos.TabIndex = 18;
-            // 
-            // labelSelectedFlagsHidden
-            // 
-            this.labelSelectedFlagsHidden.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelSelectedFlagsHidden.AutoSize = true;
-            this.labelSelectedFlagsHidden.Location = new System.Drawing.Point(283, 42);
-            this.labelSelectedFlagsHidden.Name = "labelSelectedFlagsHidden";
-            this.labelSelectedFlagsHidden.Size = new System.Drawing.Size(0, 13);
-            this.labelSelectedFlagsHidden.TabIndex = 19;
             // 
             // MainForm
             // 

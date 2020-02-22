@@ -185,7 +185,7 @@ namespace FFRadarBuddy
 
                 // sig match: start of opcode sequence
                 // move to end and do short jump
-                PatternJumpAddress = scanner.FindPatternMatchFull(PatternBytes, PatternMask);
+                PatternJumpAddress = scanner.FindPatternInMemory(PatternBytes, PatternMask, MemoryScanner.MemoryRegionFlags.All);
                 //Logger.WriteLine("Resolving '" + this + "'... patternStart:" + PatternJumpAddress.ToString("x8"));
 
                 if (PatternJumpAddress != 0)

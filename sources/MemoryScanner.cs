@@ -11,18 +11,6 @@ namespace FFRadarBuddy
 {
     public class MemoryScanner
     {
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MEMORY_BASIC_INFORMATION
-        {
-            public IntPtr BaseAddress;
-            public IntPtr AllocationBase;
-            public uint AllocationProtect;
-            public IntPtr RegionSize;
-            public uint State;
-            public uint Protect;
-            public uint Type;
-        }
-
         [Flags]
         public enum ProcessAccessFlags : uint
         {
@@ -41,6 +29,53 @@ namespace FFRadarBuddy
             Synchronize = 0x00100000
         }
 
+        [Flags]
+        public enum MemoryProtectionFlags : uint
+        {
+            PAGE_EXECUTE = 0x10,
+            PAGE_EXECUTE_READ = 0x20,
+            PAGE_EXECUTE_READWRITE = 0x40,
+            PAGE_EXECUTE_WRITECOPY = 0x80,
+            PAGE_NOACCESS = 0x1,
+            PAGE_READONLY = 0x2,
+            PAGE_READWRITE = 0x4,
+            PAGE_WRITECOPY = 0x8,
+            PAGE_TARGETS_INVALID = 0x40000000,
+            PAGE_TARGETS_NO_UPDATE = 0x40000000,
+            PAGE_GUARD = 0x100,
+            PAGE_NOCACHE = 0x200,
+            PAGE_WRITECOMBINE = 0x400,
+        }
+
+        [Flags]
+        public enum MemoryStateFlags : uint
+        {
+            MEM_COMMIT = 0x1000,
+            MEM_FREE = 0x10000,
+            MEM_RESERVE = 0x2000,
+        }
+
+        [Flags]
+        public enum MemoryRegionFlags : uint
+        {
+            Writeable = 0x1,
+            Executable = 0x2,
+            MainModule = 0x4,
+            All = Writeable | Executable,
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MEMORY_BASIC_INFORMATION
+        {
+            public IntPtr BaseAddress;
+            public IntPtr AllocationBase;
+            public uint AllocationProtect;
+            public IntPtr RegionSize;
+            public MemoryStateFlags State;
+            public MemoryProtectionFlags Protect;
+            public uint Type;
+        }
+
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         private static extern bool ReadProcessMemory(IntPtr processHandle, IntPtr lpBaseAddress, [In] [Out] byte[] lpBuffer, IntPtr regionSize, out IntPtr lpNumberOfBytesRead);
 
@@ -50,10 +85,22 @@ namespace FFRadarBuddy
         [DllImport("kernel32.dll")]
         private static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
 
-        private struct MemoryRegionInfo
+        public struct MemoryRegionInfo
         {
             public IntPtr BaseAddress;
             public IntPtr Size;
+            public MemoryRegionFlags Type;
+            public byte[] CachedData;
+
+            public bool IsInside(long Address)
+            {
+                return (Address >= (long)BaseAddress) && (Address < ((long)BaseAddress + (long)Size));
+            }
+
+            public bool IsValid()
+            {
+                return (long)Size > 0;
+            }
         }
 
         private string cachedProcessName;
@@ -61,6 +108,7 @@ namespace FFRadarBuddy
         private IntPtr cachedProcessHandle;
         private long cachedProcessBase;
         private List<MemoryRegionInfo> memoryRegions = new List<MemoryRegionInfo>();
+        private bool useCachedMemory = false;
 
         public void OpenProcess(string procName)
         {
@@ -74,7 +122,7 @@ namespace FFRadarBuddy
             if (cachedProcess != null)
             {
                 cachedProcessHandle = OpenProcess(ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VirtualMemoryRead, false, match[0].Id);
-                UpdateMemoryRegions();
+                InitMemoryRegions();
             }
         }
 
@@ -109,64 +157,138 @@ namespace FFRadarBuddy
             return true;
         }
 
-        private void UpdateMemoryRegions()
+        private void InitMemoryRegions()
         {
             cachedProcessBase = (long)cachedProcess.MainModule.BaseAddress;
             MemoryRegionInfo baseModuleInfo = new MemoryRegionInfo
             {
                 BaseAddress = new IntPtr(cachedProcessBase),
-                Size = new IntPtr(cachedProcess.MainModule.ModuleMemorySize)
+                Size = new IntPtr(cachedProcess.MainModule.ModuleMemorySize),
+                Type = MemoryRegionFlags.Executable | MemoryRegionFlags.Writeable | MemoryRegionFlags.MainModule,
             };
 
             memoryRegions.Add(baseModuleInfo);
-            Console.WriteLine("base:0x" + baseModuleInfo.BaseAddress.ToString("x") + " [" + cachedProcess.MainModule.ModuleName + "], size:0x" + baseModuleInfo.Size.ToString("x"));
+            Logger.WriteLine("base:0x{0} [{1}], size:0x{2}", baseModuleInfo.BaseAddress.ToString("x"), cachedProcess.MainModule.ModuleName, baseModuleInfo.Size.ToString("x"));
+        }
 
-            bool bScanMemoryPages = false;
-            if (bScanMemoryPages)
+        public void SaveMemoryRegions()
+        {
+            using (BinaryWriter writer = new BinaryWriter(File.Open("memory.cache", FileMode.Create)))
             {
-                int regionInfoSize = Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
-
-                const uint MemProtection_PAGE_EXECUTE_READWRITE = 0x40;
-                const uint MemProtection_PAGE_EXECUTE_WRITECOPY = 0x80;
-                const uint MemProtection_PAGE_READWRITE = 0x04;
-                const uint MemProtection_PAGE_PAGE_WRITECOPY = 0x08;
-                const uint MemProtection_PAGE_GUARD = 0x100;
-                const uint MemProtection_AllWriteable = MemProtection_PAGE_EXECUTE_READWRITE | MemProtection_PAGE_EXECUTE_WRITECOPY | MemProtection_PAGE_READWRITE | MemProtection_PAGE_PAGE_WRITECOPY;
-                const uint MemState_MEM_COMMIT = 0x1000;
-
-                for (long scanAddress = 0; scanAddress < Int64.MaxValue;)
+                writer.Write(memoryRegions.Count);
+                foreach (MemoryRegionInfo regInfo in memoryRegions)
                 {
-                    MEMORY_BASIC_INFORMATION regionInfo;
-                    int result = VirtualQueryEx(cachedProcessHandle, (IntPtr)scanAddress, out regionInfo, (uint)regionInfoSize);
-                    if (result != regionInfoSize)
-                    {
-                        break;
-                    }
+                    writer.Write((long)regInfo.BaseAddress);
+                    writer.Write((long)regInfo.Size);
+                    writer.Write((uint)regInfo.Type);
 
-                    bool bShouldCacheRegion =
-                        ((regionInfo.State & MemState_MEM_COMMIT) != 0) &&
-                        ((regionInfo.Protect & MemProtection_AllWriteable) != 0) &&
-                        ((regionInfo.Protect & MemProtection_PAGE_GUARD) == 0);
-
-                    //Console.WriteLine("scan:0x" + scanAddress.ToString("x") + ", state:0x" + regionInfo.State.ToString("x") + ", protect:0x" + regionInfo.Protect.ToString("x") + ", size:0x" + regionInfo.RegionSize.ToString("x"));
-                    if (bShouldCacheRegion)
-                    {
-                        MemoryRegionInfo storeInfo = new MemoryRegionInfo
-                        {
-                            BaseAddress = regionInfo.BaseAddress,
-                            Size = regionInfo.RegionSize
-                        };
-
-                        memoryRegions.Add(storeInfo);
-                    }
-
-                    scanAddress = (long)regionInfo.BaseAddress + (long)regionInfo.RegionSize;
+                    byte[] buffer = ReadRegionMemory(regInfo);
+                    writer.Write(buffer);
                 }
             }
         }
 
-        private byte[] ReadRegionMemory(MemoryRegionInfo regionInfo)
+        public bool LoadMemoryRegions()
         {
+            useCachedMemory = false;
+            using (BinaryReader reader = new BinaryReader(File.Open("memory.cache", FileMode.Open)))
+            {
+                int numRegions = reader.ReadInt32();
+
+                memoryRegions.Clear();
+                for (int regIdx = 0; regIdx < numRegions; regIdx++)
+                {
+                    long regBaseAddr = reader.ReadInt64();
+                    long regSize = reader.ReadInt64();
+                    MemoryRegionFlags regType = (MemoryRegionFlags)reader.ReadUInt32();
+
+                    if (regIdx == 0)
+                    {
+                        regType |= MemoryRegionFlags.MainModule;
+                        cachedProcessBase = regBaseAddr;
+                    }
+
+                    MemoryRegionInfo regInfo = new MemoryRegionInfo()
+                    {
+                        BaseAddress = new IntPtr(regBaseAddr),
+                        Size = new IntPtr(regSize),
+                        Type = regType
+                    };
+
+                    regInfo.CachedData = reader.ReadBytes((int)regSize);
+                    memoryRegions.Add(regInfo);
+                }
+
+                useCachedMemory = true;
+            }
+
+            return useCachedMemory;
+        }
+
+        public void CacheMemoryRegions()
+        {
+            memoryRegions.Clear();
+            InitMemoryRegions();
+
+            MemoryProtectionFlags MemFlagsExecutable =
+                MemoryProtectionFlags.PAGE_EXECUTE |
+                MemoryProtectionFlags.PAGE_EXECUTE_READ |
+                MemoryProtectionFlags.PAGE_EXECUTE_READWRITE |
+                MemoryProtectionFlags.PAGE_EXECUTE_WRITECOPY;
+
+            MemoryProtectionFlags MemFlagsWriteable =
+                MemoryProtectionFlags.PAGE_EXECUTE_READWRITE |
+                MemoryProtectionFlags.PAGE_EXECUTE_WRITECOPY |
+                MemoryProtectionFlags.PAGE_READWRITE |
+                MemoryProtectionFlags.PAGE_WRITECOPY;
+
+            int regionInfoSize = Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+
+            for (long scanAddress = 0; scanAddress < Int64.MaxValue;)
+            {
+                MEMORY_BASIC_INFORMATION regionInfo;
+                int result = VirtualQueryEx(cachedProcessHandle, (IntPtr)scanAddress, out regionInfo, (uint)regionInfoSize);
+                if (result != regionInfoSize)
+                {
+                    break;
+                }
+
+                bool bIsCommited = (regionInfo.State & MemoryStateFlags.MEM_COMMIT) != 0;
+                bool bIsGuarded = (regionInfo.Protect & MemoryProtectionFlags.PAGE_GUARD) != 0;
+                bool bIsWritebale = (regionInfo.Protect & MemFlagsWriteable) != 0;
+                bool bIsExecutable = (regionInfo.Protect & MemFlagsExecutable) != 0;
+                bool bShouldCacheRegion = bIsCommited && !bIsGuarded && (bIsWritebale || bIsExecutable);
+
+                Logger.WriteLine("scan:0x{0}, size:0x{1}, state:[{2}], protect:[{3}], type:0x{4} => {5}",
+                    scanAddress.ToString("x"), regionInfo.RegionSize.ToString("x"), regionInfo.State, regionInfo.Protect, regionInfo.Type.ToString("x"),
+                    bShouldCacheRegion ? "CACHE" : "meh");
+
+                if (bShouldCacheRegion)
+                {
+                    MemoryRegionFlags storeType = (bIsWritebale ? MemoryRegionFlags.Writeable : 0) | (bIsExecutable ? MemoryRegionFlags.Executable : 0);
+                    MemoryRegionInfo storeInfo = new MemoryRegionInfo
+                    {
+                        BaseAddress = regionInfo.BaseAddress,
+                        Size = regionInfo.RegionSize,
+                        Type = storeType,
+                    };
+
+                    memoryRegions.Add(storeInfo);
+                }
+
+                scanAddress = (long)regionInfo.BaseAddress + (long)regionInfo.RegionSize;
+            }
+        }
+
+        public byte[] ReadRegionMemory(MemoryRegionInfo regionInfo)
+        {
+#if DEBUG
+            if (useCachedMemory)
+            {
+                return regionInfo.CachedData;
+            }
+#endif // DEBUG
+
             byte[] memBuffer = new byte[(long)regionInfo.Size];
             IntPtr bytesRead = IntPtr.Zero;
             ReadProcessMemory(cachedProcessHandle, regionInfo.BaseAddress, memBuffer, regionInfo.Size, out bytesRead);
@@ -177,6 +299,21 @@ namespace FFRadarBuddy
         public byte[] ReadBytes(long Address, int Size)
         {
             byte[] memBuffer = new byte[Size];
+#if DEBUG
+            if (useCachedMemory)
+            {
+                MemoryRegionInfo regInfo = FindMemoryRegion(Address);
+                long copyEndAddr = Math.Min((long)regInfo.BaseAddress + (long)regInfo.Size, Address + Size);
+                long copySize = copyEndAddr - Address;
+                if (copySize > 0)
+                {
+                    Array.Copy(regInfo.CachedData, Address - (long)regInfo.BaseAddress, memBuffer, 0, copySize);
+                }
+
+                return memBuffer;
+            }
+#endif // DEBUG
+
             IntPtr bytesRead = IntPtr.Zero;
             ReadProcessMemory(cachedProcessHandle, new IntPtr(Address), memBuffer, new IntPtr(Size), out bytesRead);
 
@@ -195,12 +332,25 @@ namespace FFRadarBuddy
             return BitConverter.ToInt64(memBuffer, 0);
         }
 
-        public long FindPatternMatch(byte[] buffer, byte[] patternBytes, byte[] patternMask)
+        public MemoryRegionInfo FindMemoryRegion(long Address)
+        {
+            foreach (MemoryRegionInfo regInfo in memoryRegions)
+            {
+                if (regInfo.IsInside(Address))
+                {
+                    return regInfo;
+                }                
+            }
+
+            return new MemoryRegionInfo() { BaseAddress = new IntPtr(0), Size = new IntPtr(0) };
+        }
+
+        public long FindPatternInBuffer(byte[] buffer, byte[] patternBytes, byte[] patternMask, long startIndex = 0)
         {
             long matchOffset = 0;
 
             long maxOffsetToCheck = buffer.Length - patternBytes.Length;
-            for (long offset = 0; offset < maxOffsetToCheck; offset++)
+            for (long offset = startIndex; offset < maxOffsetToCheck; offset++)
             {
                 if (buffer[offset] == patternBytes[0])
                 {
@@ -224,23 +374,52 @@ namespace FFRadarBuddy
             return matchOffset;
         }
 
-        public long FindPatternMatchFull(byte[] patternBytes, byte[] patternMask)
+        public long FindPatternInMemory(byte[] patternBytes, byte[] patternMask, MemoryRegionFlags regionFlags)
         {
             foreach (MemoryRegionInfo regionInfo in memoryRegions)
             {
-                byte[] regionMemory = ReadRegionMemory(regionInfo);
-                if (regionMemory != null)
+                if ((regionInfo.Type & regionFlags) != 0)
                 {
-                    long matchOffset = FindPatternMatch(regionMemory, patternBytes, patternMask);
-                    if (matchOffset != 0)
+                    byte[] regionMemory = ReadRegionMemory(regionInfo);
+                    if (regionMemory != null)
                     {
-                        matchOffset += (long)regionInfo.BaseAddress;
-                        return matchOffset;
+                        long matchOffset = FindPatternInBuffer(regionMemory, patternBytes, patternMask);
+                        if (matchOffset != 0)
+                        {
+                            matchOffset += (long)regionInfo.BaseAddress;
+                            return matchOffset;
+                        }
                     }
                 }
             }
 
             return 0;
+        }
+
+        public List<long> FindPatternInMemoryAll(byte[] patternBytes, byte[] patternMask, MemoryRegionFlags regionFlags)
+        {
+            List<long> results = new List<long>();
+
+            foreach (MemoryRegionInfo regionInfo in memoryRegions)
+            {
+                if ((regionInfo.Type & regionFlags) != 0)
+                {
+                    byte[] regionMemory = ReadRegionMemory(regionInfo);
+                    if (regionMemory != null)
+                    {
+                        long matchOffset = FindPatternInBuffer(regionMemory, patternBytes, patternMask);
+                        while (matchOffset != 0)
+                        {
+                            long matchAddr = matchOffset + (long)regionInfo.BaseAddress;
+                            results.Add(matchAddr);
+
+                            matchOffset = FindPatternInBuffer(regionMemory, patternBytes, patternMask, matchOffset + patternBytes.Length);
+                        }
+                    }
+                }
+            }
+
+            return results;
         }
     }
 }
