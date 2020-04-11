@@ -11,39 +11,38 @@ namespace FFRadarBuddy
         //
         // camera: researched on my own
 
-        //public static MemoryPath memPathActors = new MemoryPathSignature("488b420848c1e8033da701000077248bc0488d0d", 0);
-        public static MemoryPath memPathActors = new MemoryPath(0x1C62218);
-        public static MemoryPath memPathTarget = new MemoryPathSignature("41bc000000e041bd01000000493bc47555488d0d", 144);
+        public static MemoryPath memPathActors = new MemoryPathSignature("488b420848c1e8033da701000077??8bc0488d0d", 0);
+        public static MemoryPath memPathTarget = new MemoryPathSignature("5fc3483935????????75??483935", -16);
         public static MemoryPath memPathCamera = new MemoryPathSignature("4c897c242083f8ff75054533ffeb0d48984c8d3d", 0, 0);
 
         public class ActorConsts
         {
-            public const int Size = 9200;
+            public static int Size = 9200;
 
-            public const int Name = 48;             // string
-            public const int ActorIdA = 116;        // uint32
-            public const int ActorIdB = 120;        // uint32
-            public const int NpcId = 128;           // uint32
-            public const int Type = 140;            // uint8
-            public const int SubType = 141;         // uint8
-            public const int Flags = 148;           // uint8
-            public const int Position = 160;        // 3x float
-            public const int HitBoxRadius = 192;    // float
+            public static int Name = 48;             // string
+            public static int ActorIdA = 116;        // uint32
+            public static int ActorIdB = 120;        // uint32
+            public static int NpcId = 128;           // uint32
+            public static int Type = 140;            // uint8
+            public static int SubType = 141;         // uint8
+            public static int Flags = 148;           // uint8
+            public static int Position = 160;        // 3x float
+            public static int HitBoxRadius = 192;    // float
         }
 
         public class TargetConsts
         {
-            public const int Size = 48;
-            public const int Current = 40;          // uint64 (actor ptr)
+            public static int Size = 48;
+            public static int Current = 40;          // uint64 (actor ptr)
         }
 
         public class CameraConsts
         {
-            public const int Size = 0x1d0;
-            public const int Position = 0x1b0;       // 3x float
-            public const int Target = 0x1c0;         // 3x float
-            public const int Distance = 0x114;      // float
-            public const int Fov = 0x120;           // float
+            public static int Size = 0x1d0;
+            public static int Position = 0x1b0;       // 3x float
+            public static int Target = 0x1c0;         // 3x float
+            public static int Distance = 0x114;      // float
+            public static int Fov = 0x120;           // float
         }
 
         public enum ActorType : byte

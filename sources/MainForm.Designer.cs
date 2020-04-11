@@ -745,7 +745,6 @@
             // 
             // timerScan
             // 
-            this.timerScan.Enabled = true;
             this.timerScan.Interval = 1000;
             this.timerScan.Tick += new System.EventHandler(this.timerScan_Tick);
             // 

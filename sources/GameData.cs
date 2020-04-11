@@ -9,6 +9,7 @@ namespace FFRadarBuddy
     {
         public enum ScannerState
         {
+            Disabled,
             MissingProcess,
             MissingMemPaths,
             Ready,

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -29,6 +26,8 @@ namespace FFRadarBuddy
             string versionTitle = " [v" + version.Major + "]";
             Text = orgTitle + versionTitle;
 
+            GameData_OnScannerStateChanged(GameData.ScannerState.Disabled);
+
             PlayerSettings.Get().Load();
             UpdatePresetList();
             RunUpdateCheck();
@@ -37,7 +36,6 @@ namespace FFRadarBuddy
             splitContainer2.Panel1Collapsed = true;
             listViewActors.ListViewItemSorter = actorListSorter;
 
-            GameData_OnScannerStateChanged(GameData.ScannerState.MissingProcess);
             gameData.OnScannerStateChanged += GameData_OnScannerStateChanged;
             gameData.OnActorListChanged += GameData_OnActorListChanged;
 
@@ -176,6 +174,11 @@ namespace FFRadarBuddy
                     panelScanState.BackColor = Color.FromArgb(0xff, 0xfa, 0x87, 0x95);
                     labelScanState.Text = "Status: Can't find data in memory!";
                     break;
+
+                case GameData.ScannerState.Disabled:
+                    panelScanState.BackColor = Color.FromArgb(0xff, 0x80, 0x80, 0x80);
+                    labelScanState.Text = "Status: syncing...";
+                    break;
             }
 
             overlay.SetScanActive(newState == GameData.ScannerState.Ready);
@@ -302,11 +305,25 @@ namespace FFRadarBuddy
                 });
             });
 
+            Task updateLayoutTask = new Task(() =>
+            {
+                GithubUpdaterLayout.DownloadAndUpdateLayout(out string statusMsg);
+
+                Invoke((MethodInvoker)delegate
+                {
+                    Logger.WriteLine("Layout sync: " + statusMsg);
+
+                    GameData_OnScannerStateChanged(GameData.ScannerState.MissingProcess);
+                    timerScan.Start();
+                });
+            });
+
             buttonPresetOptions.Text = "Syncing...";
             buttonPresetOptions.Enabled = false;
 
             updateProgramTask.Start();
             updatePresetsTask.Start();
+            updateLayoutTask.Start();
         }
 
         private void labelUpdateNotify_Click(object sender, EventArgs e)

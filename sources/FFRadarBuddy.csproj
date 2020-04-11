@@ -63,6 +63,7 @@
     <Compile Include="ActorFilter.cs" />
     <Compile Include="GameDataFinder.cs" />
     <Compile Include="GithubUpdater.cs" />
+    <Compile Include="GithubUpdaterLayout.cs" />
     <Compile Include="GithubUpdaterPresets.cs" />
     <Compile Include="JsonParser.cs" />
     <Compile Include="ListViewColumnSorter.cs" />
