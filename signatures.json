@@ -1,0 +1,25 @@
+{"layout":[
+{"id":"actors","type":"sig","sig":"488b420848c1e8033da701000077??8bc0488d0d","offsets":[0],"fields":[
+	{"id":"size","v":9200},
+	{"id":"name","v":48},
+	{"id":"actorIdA","v":116},
+	{"id":"actorIdB","v":120},
+	{"id":"npcId","v":128},
+	{"id":"type","v":140},
+	{"id":"subType","v":141},
+	{"id":"flags","v":148},
+	{"id":"position","v":160},
+	{"id":"hitBoxRadius","v":192}
+]},
+{"id":"target","type":"sig","sig":"5fc3483935????????75??483935","offsets":[-16],"fields":[
+	{"id":"size","v":48},
+	{"id":"current","v":40}
+]},
+{"id":"camera","type":"sig","sig":"4c897c242083f8ff75054533ffeb0d48984c8d3d","offsets":[0,0],"fields":[
+	{"id":"size","v":464},
+	{"id":"position","v":432},
+	{"id":"target","v":448},
+	{"id":"distance","v":276},
+	{"id":"fov","v":288}
+]}
+]}
